@@ -8,11 +8,13 @@ const LoginView = {
       <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 20px;">
         <div style="max-width: 440px; width: 100%; background: #ffffff; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25); overflow: hidden;">
           <div style="padding: 32px 32px 24px 32px; text-align: center; border-bottom: 1px solid #f1f5f9;">
-            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; border-radius: 14px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">
-              PF
+            <div style="width: 58px; height: 58px; background: linear-gradient(135deg, #059669 0%, #2563eb 100%); color: #fff; border-radius: 16px; margin: 0 auto 14px auto; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);">
+              ⚡
             </div>
-            <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">PRATİKFATURA</h1>
-            <p style="font-size: 13px; color: #64748b;">Yeni Nesil e-Arşiv Fatura ve Dijital POS Portalı</p>
+            <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
+              KES<span style="color: #2563eb;">FATURA</span><span style="font-size: 14px; color: #059669; font-weight: 700;">.COM</span>
+            </h1>
+            <p style="font-size: 13px; color: #64748b; margin-top: 2px;">Yeni Nesil Hızlı e-Arşiv Fatura Portalı</p>
           </div>
 
           <form id="form-login" style="padding: 24px 32px 32px 32px;">
