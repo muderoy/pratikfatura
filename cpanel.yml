@@ -1,0 +1,9 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/kesfattura/public_html/
+    - /bin/cp -R client $DEPLOYPATH
+    - /bin/cp -R php_backend $DEPLOYPATH
+    - /bin/cp client/public/index.html $DEPLOYPATH
+    - /bin/cp -R client/css $DEPLOYPATH
+    - /bin/cp -R client/js $DEPLOYPATH
