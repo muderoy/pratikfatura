@@ -1,5 +1,5 @@
 /**
- * PRATİKFATURA Multi-Role Secure Login View
+ * KESFATURA.COM Multi-Role Secure Login View
  */
 
 const LoginView = {
@@ -8,7 +8,7 @@ const LoginView = {
       <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 20px;">
         <div style="max-width: 440px; width: 100%; background: #ffffff; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25); overflow: hidden;">
           <div style="padding: 32px 32px 24px 32px; text-align: center; border-bottom: 1px solid #f1f5f9;">
-            <div style="width: 58px; height: 58px; background: linear-gradient(135deg, #059669 0%, #2563eb 100%); color: #fff; border-radius: 16px; margin: 0 auto 14px auto; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);">
+            <div style="width: 58px; height: 58px; background: linear-gradient(135deg, #059669 0%, #2563eb 100%); color: #fff; border-radius: 16px; margin: 0 auto 14px auto; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);">
               ⚡
             </div>
             <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
@@ -87,11 +87,11 @@ const LoginView = {
           } else if (res.user.role === 'RESELLER') {
             window.location.hash = '#/reseller';
           } else {
-            // Default screen for business users is ALWAYS the Quick Invoice POS screen!
             window.location.hash = '#/pos';
           }
         } catch (err) {
-          Toast.error(err.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol ediniz.');
+          Toast.error(err.message || 'Giriş yapılamadı. Bilgilerinizi kontrol ediniz.');
+        } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = 'Güvenli Giriş Yap';
         }
