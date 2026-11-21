@@ -167,14 +167,14 @@ const Modals = {
         <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #1e293b;">
           <div>
             <div style="font-weight: 800; font-size: 16px; color: #f8fafc;">${card.name}</div>
-            <div style="font-size: 11px; color: #94a3b8;">KDV: %${card.vat_rate} &bull; Birim: ${card.unit}</div>
+            <div style="font-size: 11px; color: #94a3b8;">KDV: %${card.vat_rate} &bull; Birim: ${card.unit || 'Adet'}</div>
           </div>
           <button type="button" class="btn btn-outline btn-sm modal-close" style="padding: 4px 10px; border-color: #334155; color: #94a3b8;">✕</button>
         </div>
         <form id="form-pos-amount">
           <div class="modal-body" style="padding: 20px;">
             <div class="form-group" style="margin-bottom: 20px;">
-              <label class="form-label" style="font-size: 13px; color: #f1f5f9; font-weight: 700; margin-bottom: 8px;">FATURA TUTARI (KDV DAHİL) *</label>
+              <label class="form-label" style="font-size: 13px; color: #f1f5f9; font-weight: 700; margin-bottom: 8px;">MAL/HİZMET TUTARI (KDV DAHİL) *</label>
               <div style="position: relative;">
                 <input type="number" step="0.01" min="1" id="input-amount" name="amount" 
                   value="${card.default_price || ''}" 
@@ -191,20 +191,21 @@ const Modals = {
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 12px; color: #94a3b8;">Miktar</label>
-                <input type="number" step="1" min="1" name="quantity" value="1" class="form-input" style="background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc;" required>
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 12px; color: #94a3b8;">Birim</label>
-                <input type="text" name="unit" value="${card.unit || 'Sefer'}" class="form-input" style="background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc;">
-              </div>
+            <!-- Miktar Girişi (Birim kart ayarlarından otomatik gelir, kutu kaldırıldı) -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" style="font-size: 12px; color: #94a3b8;">
+                Miktar <span style="color: #60a5fa; font-weight: normal;">(Birim: ${card.unit || 'Adet'})</span>
+              </label>
+              <input type="number" step="1" min="1" name="quantity" value="1" class="form-input" style="height: 46px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; font-size: 15px; font-weight: 700;" required>
             </div>
 
+            <!-- Hizmet / Açıklama Notu (Kart adına eklenir) -->
             <div class="form-group" style="margin-bottom: 10px;">
               <label class="form-label" style="font-size: 12px; color: #94a3b8;">Hizmet / Açıklama Notu (İsteğe Bağlı)</label>
-              <input type="text" name="customName" value="${card.name}" class="form-input" style="background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc;">
+              <input type="text" name="additionalNote" placeholder="Örn: 34 ABC 123 Plaka, İstanbul-Ankara vb." class="form-input" style="height: 44px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; font-size: 13px;">
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                Yazılan not faturada "${card.name} - [Notunuz]" şeklinde yer alacaktır.
+              </div>
             </div>
           </div>
           <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #1e293b;">
@@ -231,8 +232,14 @@ const Modals = {
       const formData = new FormData(form);
       const amount = parseFloat(formData.get('amount'));
       const quantity = parseFloat(formData.get('quantity')) || 1;
-      const unit = formData.get('unit');
-      const name = formData.get('customName') || card.name;
+      const unit = card.unit || 'Adet'; // Birim kart ayarlarından otomatik alınır
+      const additionalNote = (formData.get('additionalNote') || '').trim();
+
+      // Mal ve Hizmet Adına Ek Not Birleştirme
+      let fullName = card.name;
+      if (additionalNote) {
+        fullName = `${card.name} - ${additionalNote}`;
+      }
 
       if (!amount || amount <= 0) {
         Toast.error('Lütfen geçerli bir tutar giriniz.');
@@ -240,7 +247,7 @@ const Modals = {
       }
 
       onAdd({
-        name,
+        name: fullName,
         quantity,
         unit,
         unitPrice: amount,
@@ -249,7 +256,7 @@ const Modals = {
       });
 
       backdrop.remove();
-      Toast.success(`"${name}" faturaya eklendi.`);
+      Toast.success(`"${fullName}" faturaya eklendi.`);
     });
   },
 
