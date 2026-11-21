@@ -163,53 +163,53 @@ const Modals = {
     backdrop.id = 'modal-amount';
 
     backdrop.innerHTML = `
-      <div class="modal-card" style="max-width: 440px;">
-        <div class="modal-header">
+      <div class="modal-card" style="max-width: 440px; background: #131b2e; border: 1px solid #1e293b;">
+        <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #1e293b;">
           <div>
-            <div style="font-weight: 700; font-size: 16px; color: #0f172a;">${card.name}</div>
-            <div style="font-size: 11px; color: #64748b;">KDV Oranı: %${card.vat_rate} - Birim: ${card.unit}</div>
+            <div style="font-weight: 800; font-size: 16px; color: #f8fafc;">${card.name}</div>
+            <div style="font-size: 11px; color: #94a3b8;">KDV: %${card.vat_rate} &bull; Birim: ${card.unit}</div>
           </div>
-          <button type="button" class="btn btn-outline btn-sm modal-close" style="padding: 4px 8px;">✕</button>
+          <button type="button" class="btn btn-outline btn-sm modal-close" style="padding: 4px 10px; border-color: #334155; color: #94a3b8;">✕</button>
         </div>
         <form id="form-pos-amount">
-          <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label" style="font-size: 15px;">Fatura Tutarı (KDV DAHİL) *</label>
+          <div class="modal-body" style="padding: 20px;">
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label class="form-label" style="font-size: 13px; color: #f1f5f9; font-weight: 700; margin-bottom: 8px;">FATURA TUTARI (KDV DAHİL) *</label>
               <div style="position: relative;">
                 <input type="number" step="0.01" min="1" id="input-amount" name="amount" 
                   value="${card.default_price || ''}" 
                   class="form-input" 
-                  style="font-size: 24px; font-weight: 800; color: #1e3a8a; height: 56px; padding-right: 48px;" 
+                  style="font-size: 26px; font-weight: 900; color: #38bdf8; height: 58px; padding-right: 48px; background: #0b0f19; border: 2px solid #1e293b; border-radius: 12px;" 
                   placeholder="0.00" 
                   required 
                   inputmode="decimal" 
                   autofocus>
-                <span style="position: absolute; right: 16px; top: 14px; font-size: 20px; font-weight: 800; color: #64748b;">₺</span>
+                <span style="position: absolute; right: 16px; top: 14px; font-size: 24px; font-weight: 800; color: #64748b;">₺</span>
               </div>
-              <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 4px;">
-                ✓ Girilen tutara %${card.vat_rate} KDV dahildir. Matrah sistem tarafından otomatik ayrıştırılır.
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label class="form-label">Miktar</label>
-                <input type="number" step="1" min="1" name="quantity" value="1" class="form-input" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Birim</label>
-                <input type="text" name="unit" value="${card.unit || 'Sefer'}" class="form-input">
+              <div style="font-size: 11px; color: #10b981; font-weight: 600; margin-top: 6px;">
+                ✓ Girilen tutara %${card.vat_rate} KDV dahildir. Matrah sistem tarafından hesaplanır.
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Hizmet / Açıklama Notu (İsteğe Bağlı)</label>
-              <input type="text" name="customName" value="${card.name}" class="form-input">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px; color: #94a3b8;">Miktar</label>
+                <input type="number" step="1" min="1" name="quantity" value="1" class="form-input" style="background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc;" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px; color: #94a3b8;">Birim</label>
+                <input type="text" name="unit" value="${card.unit || 'Sefer'}" class="form-input" style="background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc;">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 12px; color: #94a3b8;">Hizmet / Açıklama Notu (İsteğe Bağlı)</label>
+              <input type="text" name="customName" value="${card.name}" class="form-input" style="background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc;">
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline modal-close">İptal</button>
-            <button type="submit" class="btn btn-success" style="flex: 1;">Sepete / Faturaya Ekle</button>
+          <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #1e293b;">
+            <button type="button" class="btn btn-outline modal-close" style="border-color: #334155; color: #94a3b8;">İptal</button>
+            <button type="submit" class="btn btn-success" style="flex: 1; height: 44px; font-weight: 700;">Faturaya Ekle ➔</button>
           </div>
         </form>
       </div>
