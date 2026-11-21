@@ -2,7 +2,8 @@
  * KESFATURA.COM - Hızlı Fatura Kesme (Adım Adım Sihirbaz)
  * Adım 1: Fatura Tarihi
  * Adım 2: Fatura Alıcısı (Müşteri Seçimi / Arama / Ekleme)
- * Adım 3: Mal / Hizmet Kartı Seçimi, Fatura Özeti ve Faturayı Oluştur
+ * Adım 3: Mal / Hizmet Kartı Seçimi ve Fatura Özeti
+ * Adım 4: Tam Fatura Önizleme Ekranı (Düzelt / Onayla)
  */
 
 const QuickInvoiceView = {
@@ -76,7 +77,7 @@ const QuickInvoiceView = {
                 <span style="display: inline-flex; width: 24px; height: 24px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 12px; align-items: center; justify-content: center; font-weight: 800;">1</span>
                 Fatura Tarihi Giriniz
               </div>
-              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 1 / 3</span>
+              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 1 / 4</span>
             </div>
 
             <!-- Gün ve Ay Seçimi -->
@@ -153,7 +154,7 @@ const QuickInvoiceView = {
                 <span style="display: inline-flex; width: 24px; height: 24px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 12px; align-items: center; justify-content: center; font-weight: 800;">2</span>
                 Fatura Alıcısını Giriniz
               </div>
-              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 2 / 3</span>
+              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 2 / 4</span>
             </div>
 
             ${selectedCust ? `
@@ -227,127 +228,268 @@ const QuickInvoiceView = {
     }
 
     // =========================================================================
-    // 3. ADIM: MAL / HİZMET KARTI VE FATURA ÖZETİ EKRANI
+    // 3. ADIM: MAL / HİZMET KARTI VE FATURA ÖZETİ
     // =========================================================================
-    try {
-      const res = await API.getQuickCards();
-      this.quickCards = (res.cards || []).slice(0, 6); // 6 adet kart
-    } catch (e) {
-      console.error('Quick cards fetch error:', e);
-    }
+    if (this.currentStep === 3) {
+      try {
+        const res = await API.getQuickCards();
+        this.quickCards = (res.cards || []).slice(0, 6);
+      } catch (e) {
+        console.error('Quick cards fetch error:', e);
+      }
 
-    const selectedCust = State.selectedCustomer;
-    const custTitle = selectedCust ? (selectedCust.customer_type === 'INDIVIDUAL' ? `${selectedCust.first_name || ''} ${selectedCust.last_name || ''}` : selectedCust.company_name) : 'Nihai Tüketici';
-    const cartItems = State.cartItems;
-    const totals = State.getCartTotals();
+      const selectedCust = State.selectedCustomer;
+      const custTitle = selectedCust ? (selectedCust.customer_type === 'INDIVIDUAL' ? `${selectedCust.first_name || ''} ${selectedCust.last_name || ''}` : selectedCust.company_name) : 'Nihai Tüketici';
+      const cartItems = State.cartItems;
+      const totals = State.getCartTotals();
 
-    // 6 Adet Mal / Hizmet Buton Kartı
-    const cardsHtml = this.quickCards.map(c => `
-      <div class="pos-card-btn" data-card-id="${c.id}" data-card-name="${c.name}" data-card-vat="${c.vat_rate}" data-card-price="${c.default_price || 0}" data-card-unit="${c.unit || 'Adet'}" style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.15s ease; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="font-weight: 700; font-size: 14px; color: #f8fafc; line-height: 1.3;">
-          ${c.name}
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-          <span style="font-size: 11px; background: #1e293b; color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-weight: 600;">%${c.vat_rate} KDV</span>
-          <span style="font-size: 11px; color: #94a3b8;">${c.unit || 'Adet'}</span>
-        </div>
-      </div>
-    `).join('');
-
-    // Eklenen Kalemlerin Listesi
-    let cartLinesHtml = '';
-    if (cartItems.length === 0) {
-      cartLinesHtml = `
-        <div style="text-align: center; padding: 20px 10px; color: #64748b; font-size: 13px;">
-          Yukarıdaki kartlara dokunarak hizmet ve tutar ekleyiniz.
-        </div>
-      `;
-    } else {
-      cartLinesHtml = cartItems.map((it, idx) => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; margin-bottom: 8px;">
-          <div>
-            <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${it.name}</div>
-            <div style="font-size: 11px; color: #94a3b8;">${it.quantity} ${it.unit} &nbsp;|&nbsp; %${it.vatRate} KDV Dahil</div>
+      const cardsHtml = this.quickCards.map(c => `
+        <div class="pos-card-btn" data-card-id="${c.id}" data-card-name="${c.name}" data-card-vat="${c.vat_rate}" data-card-price="${c.default_price || 0}" data-card-unit="${c.unit || 'Adet'}" style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.15s ease; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="font-weight: 700; font-size: 14px; color: #f8fafc; line-height: 1.3;">
+            ${c.name}
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="font-size: 14px; font-weight: 700; color: #60a5fa;">${State.formatCurrency(it.unitPrice * it.quantity)}</div>
-            <button type="button" class="btn-remove-item" data-index="${idx}" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Sil">✕</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <span style="font-size: 11px; background: #1e293b; color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-weight: 600;">%${c.vat_rate} KDV</span>
+            <span style="font-size: 11px; color: #94a3b8;">${c.unit || 'Adet'}</span>
           </div>
         </div>
       `).join('');
+
+      let cartLinesHtml = '';
+      if (cartItems.length === 0) {
+        cartLinesHtml = `
+          <div style="text-align: center; padding: 20px 10px; color: #64748b; font-size: 13px;">
+            Yukarıdaki kartlara dokunarak hizmet ve tutar ekleyiniz.
+          </div>
+        `;
+      } else {
+        cartLinesHtml = cartItems.map((it, idx) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${it.name}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${it.quantity} ${it.unit} &nbsp;|&nbsp; %${it.vatRate} KDV Dahil</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="font-size: 14px; font-weight: 700; color: #60a5fa;">${State.formatCurrency(it.unitPrice * it.quantity)}</div>
+              <button type="button" class="btn-remove-item" data-index="${idx}" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Sil">✕</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      return `
+        <div class="content-area" style="max-width: 600px; margin: 0 auto; padding-top: 20px;">
+          <!-- Sayfa Üst Bilgisi (Küçük Özet) -->
+          <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 6px;">
+            <div style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+              <span>📅 Tarih: <strong style="color: #f8fafc;">${State.invoiceDraftDate}</strong></span>
+              <span>&bull;</span>
+              <span>👤 Alıcı: <strong style="color: #60a5fa;">${custTitle}</strong></span>
+            </div>
+            <button type="button" id="btn-back-to-step2" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px; border-color: #334155; color: #94a3b8;">
+              ← Değiştir
+            </button>
+          </div>
+
+          <!-- 3. Adım: Mal/Hizmet Kartı Seçiniz -->
+          <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
+            <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-flex; width: 22px; height: 22px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 11px; align-items: center; justify-content: center; font-weight: 800;">3</span>
+              Mal / Hizmet Kartı Seçiniz
+            </div>
+
+            <!-- 6 Adet Buton Şeklinde Hizmet Kartı -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px;">
+              ${cardsHtml}
+            </div>
+          </div>
+
+          <!-- Fatura Özeti -->
+          <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
+            <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+              Fatura Özeti
+            </div>
+
+            <!-- Eklenen Kalemler -->
+            <div style="margin-bottom: 14px;">
+              ${cartLinesHtml}
+            </div>
+
+            <!-- Toplam Rakamlar -->
+            ${cartItems.length > 0 ? `
+              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 6px;">
+                  <span>KDV Matrahı:</span>
+                  <strong style="color: #f8fafc;">${State.formatCurrency(totals.subtotal)}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
+                  <span>Hesaplanan KDV:</span>
+                  <strong style="color: #f8fafc;">${State.formatCurrency(totals.vatTotal)}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: #38bdf8; border-top: 1px solid #1e293b; padding-top: 8px;">
+                  <span>GENEL TOPLAM:</span>
+                  <span>${State.formatCurrency(totals.grandTotal)}</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Fatura Açıklaması -->
+            <div style="margin-bottom: 18px;">
+              <label style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block;">
+                Fatura Açıklaması / Not (İsteğe Bağlı)
+              </label>
+              <input type="text" id="invoice-notes-input" class="form-input" value="${State.invoiceDraftNotes || ''}" placeholder="Örn: 34 ABC 123 plakalı araç taşıma bedeli" style="height: 42px; font-size: 13px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; border-radius: 8px; width: 100%;">
+            </div>
+
+            <!-- Fatura Önizleme Butonu -->
+            <button type="button" id="btn-preview-invoice-step" class="btn btn-primary btn-block" style="height: 52px; font-size: 15px; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <span>👁️ Fatura Önizleme</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+      `;
     }
 
-    return `
-      <div class="content-area" style="max-width: 600px; margin: 0 auto; padding-top: 20px;">
-        <!-- Sayfa Üst Bilgisi (Küçük & Kısaca Önceki Adımların Özeti) -->
-        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 6px;">
-          <div style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-            <span>📅 Tarih: <strong style="color: #f8fafc;">${State.invoiceDraftDate}</strong></span>
-            <span>&bull;</span>
-            <span>👤 Alıcı: <strong style="color: #60a5fa;">${custTitle}</strong></span>
-          </div>
-          <button type="button" id="btn-back-to-step2" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px; border-color: #334155; color: #94a3b8;">
-            ← Değiştir
-          </button>
-        </div>
+    // =========================================================================
+    // 4. ADIM: TAM FATURA ÖNİZLEME SAYFASI (OKUNAKLI A4 / RESMÎ FORMAT)
+    // =========================================================================
+    if (this.currentStep === 4) {
+      const selectedCust = State.selectedCustomer;
+      const tenant = State.tenant || {
+        name: 'Öz Nakliyat Lojistik Ltd. Şti.',
+        tax_number: '1234567890',
+        tax_office: 'Kadıköy V.D.',
+        address: 'Bağdat Cad. No: 120/4 Kadıköy',
+        city: 'İstanbul',
+        district: 'Kadıköy',
+        phone: '0216 555 10 20'
+      };
 
-        <!-- 3. Adım: Mal/Hizmet Kartı Seçiniz -->
-        <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
-          <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-            <span style="display: inline-flex; width: 22px; height: 22px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 11px; align-items: center; justify-content: center; font-weight: 800;">3</span>
-            Mal / Hizmet Kartı Seçiniz
+      const custTitle = selectedCust ? (selectedCust.customer_type === 'INDIVIDUAL' ? `${selectedCust.first_name || ''} ${selectedCust.last_name || ''}` : selectedCust.company_name) : 'Nihai Tüketici';
+      const custTax = selectedCust ? selectedCust.tax_number : '11111111111';
+      const custAddr = selectedCust ? `${selectedCust.address || ''} ${selectedCust.district || ''}/${selectedCust.city || ''}` : 'Perakende Müşteri';
+      const cartItems = State.cartItems;
+      const totals = State.getCartTotals();
+      const notes = State.invoiceDraftNotes || '';
+
+      const itemsTableRows = cartItems.map((it, idx) => `
+        <tr style="border-bottom: 1px solid #1e293b;">
+          <td style="padding: 12px 10px; color: #94a3b8; font-size: 12px; text-align: center;">${idx + 1}</td>
+          <td style="padding: 12px 10px; color: #f8fafc; font-size: 13px; font-weight: 700;">${it.name}</td>
+          <td style="padding: 12px 10px; color: #f8fafc; font-size: 13px; text-align: center;">${it.quantity} ${it.unit}</td>
+          <td style="padding: 12px 10px; color: #f8fafc; font-size: 13px; text-align: right;">${State.formatCurrency(it.unitPrice)}</td>
+          <td style="padding: 12px 10px; color: #60a5fa; font-size: 12px; text-align: center; font-weight: 600;">%${it.vatRate}</td>
+          <td style="padding: 12px 10px; color: #38bdf8; font-size: 14px; text-align: right; font-weight: 800;">${State.formatCurrency(it.unitPrice * it.quantity)}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="content-area" style="max-width: 680px; margin: 0 auto; padding-top: 20px;">
+          <!-- Başlık -->
+          <div style="margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h1 style="font-size: 22px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">
+                FATURA ÖNİZLEME
+              </h1>
+              <div style="font-size: 12px; color: #94a3b8;">Lütfen fatura bilgilerini kontrol ediniz.</div>
+            </div>
+            <span style="font-size: 12px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.3);">
+              Adım 4 / 4
+            </span>
           </div>
 
-          <!-- 6 Adet Buton Şeklinde Hizmet Kartı Kutusu (2 Sütun) -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px;">
-            ${cardsHtml}
-          </div>
-        </div>
+          <!-- Okunaklı Fatura Kağıdı / Önizleme Kartı -->
+          <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 24px;">
+            <!-- Fatura Başlık & Tarih Bilgisi -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <div style="font-size: 18px; font-weight: 900; color: #38bdf8; letter-spacing: -0.3px;">KESFATURA.COM</div>
+                <div style="font-size: 11px; color: #94a3b8;">e-Arşiv Fatura Portalı</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">e-ARŞİV FATURA TASLAĞI</div>
+                <div style="font-size: 12px; color: #60a5fa; margin-top: 2px;">Tarih: <strong>${State.invoiceDraftDate}</strong></div>
+              </div>
+            </div>
 
-        <!-- Fatura Özeti Bölümü -->
-        <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
-          <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
-            Fatura Özeti
-          </div>
+            <!-- Satıcı & Alıcı Bilgileri (2 Sütun Kutu) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+              <!-- Satıcı (Biz) -->
+              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 11px; font-weight: 700; color: #60a5fa; text-transform: uppercase; margin-bottom: 4px;">DÜZENLEYEN (SATICI)</div>
+                <div style="font-size: 13px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">${tenant.name || 'İşletme'}</div>
+                <div style="font-size: 11px; color: #94a3b8;">VKN: ${tenant.tax_number || '-'}</div>
+                <div style="font-size: 11px; color: #94a3b8;">${tenant.city || ''}</div>
+              </div>
 
-          <!-- Eklenen Kalemler -->
-          <div style="margin-bottom: 14px;">
-            ${cartLinesHtml}
-          </div>
+              <!-- Alıcı (Müşteri) -->
+              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 12px;">
+                <div style="font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; margin-bottom: 4px;">ALICI (MÜŞTERİ)</div>
+                <div style="font-size: 13px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">${custTitle}</div>
+                <div style="font-size: 11px; color: #94a3b8;">VKN/TCKN: ${custTax}</div>
+                <div style="font-size: 11px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${custAddr}</div>
+              </div>
+            </div>
 
-          <!-- Toplam Rakamlar -->
-          ${cartItems.length > 0 ? `
-            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 6px;">
-                <span>KDV Matrahı:</span>
+            <!-- Kalemler Tablosu -->
+            <div style="overflow-x: auto; margin-bottom: 20px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="background: #0b0f19; border-bottom: 1px solid #1e293b;">
+                    <th style="padding: 10px; font-size: 11px; color: #94a3b8; text-transform: uppercase; text-align: center;">#</th>
+                    <th style="padding: 10px; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Mal / Hizmet Açıklaması</th>
+                    <th style="padding: 10px; font-size: 11px; color: #94a3b8; text-transform: uppercase; text-align: center;">Miktar</th>
+                    <th style="padding: 10px; font-size: 11px; color: #94a3b8; text-transform: uppercase; text-align: right;">B. Fiyat</th>
+                    <th style="padding: 10px; font-size: 11px; color: #94a3b8; text-transform: uppercase; text-align: center;">KDV</th>
+                    <th style="padding: 10px; font-size: 11px; color: #94a3b8; text-transform: uppercase; text-align: right;">Tutar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsTableRows}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Fatura Notu Varsa -->
+            ${notes ? `
+              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; margin-bottom: 18px; font-size: 12px; color: #94a3b8;">
+                <strong style="color: #f8fafc;">Fatura Notu:</strong> ${notes}
+              </div>
+            ` : ''}
+
+            <!-- Toplam Tutarlar Tablosu -->
+            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 14px 18px; margin-bottom: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; margin-bottom: 6px;">
+                <span>KDV Matrahı (Net Tutar):</span>
                 <strong style="color: #f8fafc;">${State.formatCurrency(totals.subtotal)}</strong>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
-                <span>Hesaplanan KDV:</span>
+              <div style="display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; margin-bottom: 8px;">
+                <span>Hesaplanan Toplam KDV:</span>
                 <strong style="color: #f8fafc;">${State.formatCurrency(totals.vatTotal)}</strong>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: #38bdf8; border-top: 1px solid #1e293b; padding-top: 8px;">
-                <span>GENEL TOPLAM:</span>
+              <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: #38bdf8; border-top: 1px solid #1e293b; padding-top: 10px;">
+                <span>ÖDENECEK GENEL TOPLAM:</span>
                 <span>${State.formatCurrency(totals.grandTotal)}</span>
               </div>
             </div>
-          ` : ''}
-
-          <!-- Fatura Açıklaması (İsteğe Bağlı) -->
-          <div style="margin-bottom: 16px;">
-            <label style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block;">
-              Fatura Açıklaması / Not (İsteğe Bağlı)
-            </label>
-            <input type="text" id="invoice-notes-input" class="form-input" placeholder="Örn: 34 ABC 123 plakalı araç taşıma bedeli" style="height: 42px; font-size: 13px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; border-radius: 8px; width: 100%;">
           </div>
 
-          <!-- Faturayı Oluştur Butonu -->
-          <button type="button" id="btn-create-invoice-final" class="btn btn-success btn-block" style="height: 52px; font-size: 16px; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); cursor: pointer;">
-            <span>🛡️ Faturayı Oluştur</span>
-          </button>
+          <!-- Alt İşlem Butonları (Düzelt / Onayla) -->
+          <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 14px; margin-bottom: 30px;">
+            <!-- Düzelt Butonu (3. Adıma Geri Döner) -->
+            <button type="button" id="btn-edit-invoice-draft" class="btn btn-outline" style="height: 52px; font-size: 15px; font-weight: 700; border-radius: 12px; border-color: #334155; color: #f8fafc; background: #1e293b; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <span>✏️ Düzelt</span>
+            </button>
+
+            <!-- Onayla Butonu (SMS Onay Sayfasına Yönlendirir) -->
+            <button type="button" id="btn-confirm-and-send-sms" class="btn btn-success" style="height: 52px; font-size: 16px; font-weight: 800; border-radius: 12px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <span>🛡️ Onayla (SMS Doğrula) ➔</span>
+            </button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   },
 
   bindEvents() {
@@ -355,7 +497,7 @@ const QuickInvoiceView = {
     const currentYear = today.getFullYear();
 
     // =========================================================================
-    // 1. ADIM OLAYLARI (EVENTS)
+    // 1. ADIM OLAYLARI
     // =========================================================================
     if (this.currentStep === 1) {
       document.getElementById('btn-today-invoice')?.addEventListener('click', () => {
@@ -387,7 +529,7 @@ const QuickInvoiceView = {
     }
 
     // =========================================================================
-    // 2. ADIM OLAYLARI (EVENTS)
+    // 2. ADIM OLAYLARI
     // =========================================================================
     if (this.currentStep === 2) {
       document.getElementById('btn-back-to-step1')?.addEventListener('click', () => {
@@ -400,13 +542,11 @@ const QuickInvoiceView = {
         App.render();
       });
 
-      // 3. Adıma İlerle
       document.getElementById('btn-proceed-to-step3')?.addEventListener('click', () => {
         this.currentStep = 3;
         App.render();
       });
 
-      // Hızlı Nihai Tüketici Butonu (Tek tıkla atar ve 3. adıma geçer)
       document.getElementById('btn-quick-retail-customer')?.addEventListener('click', () => {
         State.setSelectedCustomer({
           id: 'retail',
@@ -423,7 +563,6 @@ const QuickInvoiceView = {
         App.render();
       });
 
-      // Yeni Müşteri Ekle Modalı
       document.getElementById('btn-quick-new-customer')?.addEventListener('click', () => {
         Modals.showCustomerModal((newCust) => {
           State.setSelectedCustomer(newCust);
@@ -432,7 +571,6 @@ const QuickInvoiceView = {
         });
       });
 
-      // Canlı Müşteri Arama
       const searchInput = document.getElementById('customer-search-input');
       const searchResults = document.getElementById('customer-search-results');
 
@@ -503,16 +641,14 @@ const QuickInvoiceView = {
     }
 
     // =========================================================================
-    // 3. ADIM OLAYLARI (EVENTS)
+    // 3. ADIM OLAYLARI
     // =========================================================================
     if (this.currentStep === 3) {
-      // 2. Adıma Geri Dön
       document.getElementById('btn-back-to-step2')?.addEventListener('click', () => {
         this.currentStep = 2;
         App.render();
       });
 
-      // Hizmet Kartlarına Dokunma -> Tutar Girme Modalı Açılır
       document.querySelectorAll('.pos-card-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const card = {
@@ -530,7 +666,6 @@ const QuickInvoiceView = {
         });
       });
 
-      // Satırı Sil Butonu
       document.querySelectorAll('.btn-remove-item').forEach(btn => {
         btn.addEventListener('click', () => {
           const idx = parseInt(btn.dataset.index, 10);
@@ -539,25 +674,46 @@ const QuickInvoiceView = {
         });
       });
 
-      // Faturayı Oluştur Butonu -> GİB SMS Akışını Başlatır
-      document.getElementById('btn-create-invoice-final')?.addEventListener('click', async () => {
+      // "Fatura Önizleme" Butonu -> 4. Adıma (Tam Önizleme Ekranına) Geçer
+      document.getElementById('btn-preview-invoice-step')?.addEventListener('click', () => {
         if (State.cartItems.length === 0) {
-          Toast.error('Lütfen en az bir hizmet kartına dokunarak tutar ekleyiniz.');
+          Toast.error('Önizleme yapabilmek için lütfen en az bir hizmet kartı ekleyiniz.');
           return;
         }
 
-        const submitBtn = document.getElementById('btn-create-invoice-final');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'GİB e-Arşiv Bağlanıyor... Lütfen Bekleyiniz...';
-
         const notes = document.getElementById('invoice-notes-input')?.value || '';
+        State.invoiceDraftNotes = notes;
+
+        // 4. Adıma geç
+        this.currentStep = 4;
+        App.render();
+      });
+
+      return;
+    }
+
+    // =========================================================================
+    // 4. ADIM OLAYLARI (ÖNİZLEME: DÜZELT / ONAYLA)
+    // =========================================================================
+    if (this.currentStep === 4) {
+      // 1. "Düzelt" Butonu -> 3. Adıma geri döner, bilgiler kaybolmaz
+      document.getElementById('btn-edit-invoice-draft')?.addEventListener('click', () => {
+        this.currentStep = 3;
+        App.render();
+      });
+
+      // 2. "Onayla" Butonu -> Faturayı kaydeder ve GİB SMS Onay Ekranını açar
+      document.getElementById('btn-confirm-and-send-sms')?.addEventListener('click', async () => {
+        const confirmBtn = document.getElementById('btn-confirm-and-send-sms');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span>GİB Portala Bağlanıyor... Lütfen Bekleyiniz...</span>';
 
         try {
           // 1. Taslak Fatura Oluştur
           const draftRes = await API.createInvoice({
             customerId: State.selectedCustomer ? State.selectedCustomer.id : 'retail',
             invoiceMode: 'QUICK',
-            notes,
+            notes: State.invoiceDraftNotes || '',
             items: State.cartItems
           });
 
@@ -566,19 +722,20 @@ const QuickInvoiceView = {
           // 2. GİB SMS Kodu İste
           const smsRes = await API.requestGibSms(invoiceId);
 
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>🛡️ Faturayı Oluştur</span>';
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = '<span>🛡️ Onayla (SMS Doğrula) ➔</span>';
 
-          // 3. Kullanıcıya SMS Kod Giriş Ekranını Aç
+          // 3. Kullanıcıya GİB SMS Doğrulama Ekranını Aç
           Modals.showSmsModal(invoiceId, smsRes, (finalizedInvoice) => {
             State.clearCart();
+            State.invoiceDraftNotes = '';
             Modals.showPrintModal(finalizedInvoice.id, finalizedInvoice.invoice_number);
             window.location.hash = '#/invoices';
           });
         } catch (err) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>🛡️ Faturayı Oluştur</span>';
-          Toast.error(err.message || 'Fatura oluşturulurken hata oluştu.');
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = '<span>🛡️ Onayla (SMS Doğrula) ➔</span>';
+          Toast.error(err.message || 'SMS kodu istenirken bir hata oluştu.');
         }
       });
     }
