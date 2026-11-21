@@ -384,15 +384,26 @@ const QuickInvoiceView = {
         </tr>
       `).join('');
 
+      // Tarihi Gün.Ay.Yıl formatına dönüştürme (Örn: 2026-11-22 -> 22.11.2026)
+      let formattedDate = State.invoiceDraftDate || '';
+      if (formattedDate.includes('-')) {
+        const parts = formattedDate.split('-');
+        if (parts.length === 3) {
+          formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+      }
+
       return `
         <div class="content-area" style="max-width: 680px; margin: 0 auto; padding-top: 20px;">
-          <!-- Başlık -->
+          <!-- Başlık ve Fatura Tarihi (Gün.Ay.Yıl) -->
           <div style="margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h1 style="font-size: 22px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">
+              <h1 style="font-size: 22px; font-weight: 800; color: #f8fafc; margin-bottom: 2px;">
                 FATURA ÖNİZLEME
               </h1>
-              <div style="font-size: 12px; color: #94a3b8;">Lütfen fatura bilgilerini kontrol ediniz.</div>
+              <div style="font-size: 13px; color: #60a5fa; font-weight: 700;">
+                Tarih: ${formattedDate}
+              </div>
             </div>
             <span style="font-size: 12px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.3);">
               Adım 4 / 4
@@ -401,12 +412,6 @@ const QuickInvoiceView = {
 
           <!-- Okunaklı Fatura Kağıdı / Önizleme Kartı -->
           <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 24px;">
-            <!-- Fatura Tarih Bilgisi (Yazılar temizlendi) -->
-            <div style="display: flex; justify-content: flex-end; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 18px;">
-              <div style="font-size: 13px; color: #94a3b8;">
-                Fatura Tarihi: <strong style="color: #60a5fa; font-size: 14px;">${State.invoiceDraftDate}</strong>
-              </div>
-            </div>
 
             <!-- Satıcı & Alıcı Bilgileri (2 Sütun Kutu) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
