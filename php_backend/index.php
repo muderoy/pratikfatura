@@ -157,6 +157,36 @@ try {
         jsonResponse(['success' => true, 'products' => $products]);
     }
 
+    // Ürün Güncelleme (PUT /api/products/:id)
+    if (preg_match('#^/api/products/([a-zA-Z0-9-]+)$#', $path, $m) && ($method === 'PUT' || $method === 'POST')) {
+        $u = requireAuth(['BUSINESS_USER']);
+        $productId = $m[1];
+        $name = trim($body['name'] ?? '');
+        $unit = trim($body['unit'] ?? 'Adet');
+        $vatRate = (float)($body['vatRate'] ?? $body['vat_rate'] ?? 20);
+        $defaultPrice = (float)($body['defaultPrice'] ?? $body['default_price'] ?? 0);
+        $code = trim($body['code'] ?? '');
+        $description = trim($body['description'] ?? '');
+        $isQuickCard = !empty($body['isQuickCard']) ? 1 : 0;
+
+        Database::run(
+            "UPDATE products SET name = ?, unit = ?, vat_rate = ?, default_price = ?, code = ?, description = ?, is_quick_card = ? WHERE id = ? AND tenant_id = ?",
+            [$name, $unit, $vatRate, $defaultPrice, $code, $description, $isQuickCard, $productId, $u['tenantId']]
+        );
+
+        $updatedProduct = Database::get('SELECT * FROM products WHERE id = ?', [$productId]);
+        jsonResponse(['success' => true, 'product' => $updatedProduct]);
+    }
+
+    // Ürün Favori Durumunu Değiştir (POST /api/products/:id/toggle-quick)
+    if (preg_match('#^/api/products/([a-zA-Z0-9-]+)/toggle-quick$#', $path, $m) && $method === 'POST') {
+        $u = requireAuth(['BUSINESS_USER']);
+        $productId = $m[1];
+        $isQuick = !empty($body['isQuickCard']) ? 1 : 0;
+        Database::run('UPDATE products SET is_quick_card = ? WHERE id = ? AND tenant_id = ?', [$isQuick, $productId, $u['tenantId']]);
+        jsonResponse(['success' => true]);
+    }
+
     // 4. CUSTOMERS
     if ($path === '/api/customers' && $method === 'GET') {
         $u = requireAuth(['BUSINESS_USER']);
