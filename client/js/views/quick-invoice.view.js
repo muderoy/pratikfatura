@@ -2,11 +2,13 @@
  * KESFATURA.COM - Hızlı Fatura Kesme (Adım Adım Sihirbaz)
  * Adım 1: Fatura Tarihi
  * Adım 2: Fatura Alıcısı (Müşteri Seçimi / Arama / Ekleme)
+ * Adım 3: Mal / Hizmet Kartı Seçimi, Fatura Özeti ve Faturayı Oluştur
  */
 
 const QuickInvoiceView = {
   currentStep: 1,
   searchTimeout: null,
+  quickCards: [],
 
   async render() {
     const today = new Date();
@@ -56,7 +58,6 @@ const QuickInvoiceView = {
 
       return `
         <div class="content-area" style="max-width: 600px; margin: 0 auto; padding-top: 24px;">
-          <!-- Sayfa Başlığı ve Bilgilendirme -->
           <div style="margin-bottom: 24px;">
             <h1 style="font-size: 26px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; margin-bottom: 6px;">
               HIZLI FATURA KES
@@ -69,17 +70,16 @@ const QuickInvoiceView = {
             </div>
           </div>
 
-          <!-- 1. Adım Kartı -->
           <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">
               <div style="font-size: 16px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
                 <span style="display: inline-flex; width: 24px; height: 24px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 12px; align-items: center; justify-content: center; font-weight: 800;">1</span>
                 Fatura Tarihi Giriniz
               </div>
-              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 1 / 4</span>
+              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 1 / 3</span>
             </div>
 
-            <!-- Gün ve Ay Seçimi (Yan Yana) -->
+            <!-- Gün ve Ay Seçimi -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
               <div>
                 <label for="select-invoice-day" style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; display: block;">
@@ -100,7 +100,7 @@ const QuickInvoiceView = {
               </div>
             </div>
 
-            <!-- Fatura Yılı (Gün ve Ayın Altında) -->
+            <!-- Fatura Yılı -->
             <div style="margin-bottom: 24px;">
               <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; display: block;">
                 Fatura Yılı
@@ -111,13 +111,11 @@ const QuickInvoiceView = {
               </div>
             </div>
 
-            <!-- Devam Et Butonu -->
             <button type="button" id="btn-submit-date" class="btn btn-primary btn-block" style="height: 50px; font-size: 15px; font-weight: 700; border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
               <span>Seçilen Tarih ile Devam Et</span>
               <span>➔</span>
             </button>
 
-            <!-- Bugün Tarihli Kes Butonu -->
             <button type="button" id="btn-today-invoice" class="btn btn-block" style="height: 50px; font-size: 15px; font-weight: 700; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff; border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
               <span>⚡ Bugün Tarihli Kes</span>
               <span style="font-size: 12px; opacity: 0.9; font-weight: normal;">(${currentDay < 10 ? '0' + currentDay : currentDay}.${currentMonth < 10 ? '0' + currentMonth : currentMonth}.${currentYear})</span>
@@ -128,108 +126,225 @@ const QuickInvoiceView = {
     }
 
     // =========================================================================
-    // 2. ADIM: FATURA ALICISI (MÜŞTERİ SEÇİMİ) EKRANI
+    // 2. ADIM: FATURA ALICISI EKRANI
     // =========================================================================
+    if (this.currentStep === 2) {
+      const selectedCust = State.selectedCustomer;
+
+      return `
+        <div class="content-area" style="max-width: 600px; margin: 0 auto; padding-top: 24px;">
+          <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h1 style="font-size: 24px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; margin-bottom: 4px;">
+                HIZLI FATURA KES
+              </h1>
+              <div style="font-size: 13px; color: #94a3b8;">
+                Fatura Tarihi: <strong style="color: #60a5fa;">${State.invoiceDraftDate || 'Bugün'}</strong>
+              </div>
+            </div>
+            <button type="button" id="btn-back-to-step1" class="btn btn-outline btn-sm" style="border-color: #334155; color: #94a3b8; font-size: 12px;">
+              ← Tarihi Değiştir
+            </button>
+          </div>
+
+          <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">
+              <div style="font-size: 16px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; width: 24px; height: 24px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 12px; align-items: center; justify-content: center; font-weight: 800;">2</span>
+                Fatura Alıcısını Giriniz
+              </div>
+              <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 2 / 3</span>
+            </div>
+
+            ${selectedCust ? `
+              <div style="background: #0b0f19; border: 1px solid #3b82f6; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <span class="badge ${selectedCust.customer_type === 'INDIVIDUAL' ? 'badge-info' : 'badge-success'}" style="margin-bottom: 8px;">
+                      ${selectedCust.customer_type === 'INDIVIDUAL' ? 'Bireysel Müşteri' : 'Kurumsal Şirket'}
+                    </span>
+                    <div style="font-size: 16px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">
+                      ${selectedCust.customer_type === 'INDIVIDUAL' ? `${selectedCust.first_name || ''} ${selectedCust.last_name || ''}` : selectedCust.company_name}
+                    </div>
+                    <div style="font-size: 12px; color: #94a3b8;">
+                      <strong>VKN/TCKN:</strong> ${selectedCust.tax_number}
+                      ${selectedCust.city ? ` &nbsp;|&nbsp; ${selectedCust.district || ''}/${selectedCust.city}` : ''}
+                    </div>
+                  </div>
+                  <button type="button" id="btn-change-selected-customer" class="btn btn-outline btn-sm" style="font-size: 11px; border-color: #334155; color: #94a3b8;">
+                    Değiştir
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" id="btn-proceed-to-step3" class="btn btn-primary btn-block" style="height: 50px; font-size: 15px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>Alıcı Onaylandı, 3. Adıma Geç</span>
+                <span>➔</span>
+              </button>
+            ` : `
+              <div style="position: relative; margin-bottom: 18px;">
+                <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; display: block;">
+                  Müşteri Ara veya Seç
+                </label>
+                <div style="position: relative;">
+                  <span style="position: absolute; left: 14px; top: 14px; color: #64748b; font-size: 16px;">🔍</span>
+                  <input 
+                    type="text" 
+                    id="customer-search-input" 
+                    class="form-input" 
+                    placeholder="Müşteri TC No, Vergi no, adı veya telefonu..." 
+                    autocomplete="off"
+                    style="height: 50px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; font-size: 14px; border-radius: 10px; padding-left: 44px; width: 100%; outline: none;"
+                  >
+                </div>
+                <div id="customer-search-results" class="dropdown-results" style="display: none; background: #0f172a; border-color: #1e293b;"></div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button 
+                  type="button" 
+                  id="btn-quick-retail-customer" 
+                  class="btn" 
+                  style="height: 48px; background: #064e3b; border: 1px solid #059669; color: #6ee7b7; font-size: 13px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;"
+                >
+                  <span>⚡ Nihai Tüketici</span>
+                  <span style="font-size: 11px; opacity: 0.8; font-weight: normal;">(Bireysel)</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  id="btn-quick-new-customer" 
+                  class="btn" 
+                  style="height: 48px; background: #1e293b; border: 1px solid #3b82f6; color: #60a5fa; font-size: 13px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;"
+                >
+                  <span>➕ Yeni Müşteri Ekle</span>
+                </button>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 3. ADIM: MAL / HİZMET KARTI VE FATURA ÖZETİ EKRANI
+    // =========================================================================
+    try {
+      const res = await API.getQuickCards();
+      this.quickCards = (res.cards || []).slice(0, 6); // 6 adet kart
+    } catch (e) {
+      console.error('Quick cards fetch error:', e);
+    }
+
     const selectedCust = State.selectedCustomer;
+    const custTitle = selectedCust ? (selectedCust.customer_type === 'INDIVIDUAL' ? `${selectedCust.first_name || ''} ${selectedCust.last_name || ''}` : selectedCust.company_name) : 'Nihai Tüketici';
+    const cartItems = State.cartItems;
+    const totals = State.getCartTotals();
+
+    // 6 Adet Mal / Hizmet Buton Kartı
+    const cardsHtml = this.quickCards.map(c => `
+      <div class="pos-card-btn" data-card-id="${c.id}" data-card-name="${c.name}" data-card-vat="${c.vat_rate}" data-card-price="${c.default_price || 0}" data-card-unit="${c.unit || 'Adet'}" style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.15s ease; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="font-weight: 700; font-size: 14px; color: #f8fafc; line-height: 1.3;">
+          ${c.name}
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          <span style="font-size: 11px; background: #1e293b; color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-weight: 600;">%${c.vat_rate} KDV</span>
+          <span style="font-size: 11px; color: #94a3b8;">${c.unit || 'Adet'}</span>
+        </div>
+      </div>
+    `).join('');
+
+    // Eklenen Kalemlerin Listesi
+    let cartLinesHtml = '';
+    if (cartItems.length === 0) {
+      cartLinesHtml = `
+        <div style="text-align: center; padding: 20px 10px; color: #64748b; font-size: 13px;">
+          Yukarıdaki kartlara dokunarak hizmet ve tutar ekleyiniz.
+        </div>
+      `;
+    } else {
+      cartLinesHtml = cartItems.map((it, idx) => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; margin-bottom: 8px;">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #f8fafc;">${it.name}</div>
+            <div style="font-size: 11px; color: #94a3b8;">${it.quantity} ${it.unit} &nbsp;|&nbsp; %${it.vatRate} KDV Dahil</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 14px; font-weight: 700; color: #60a5fa;">${State.formatCurrency(it.unitPrice * it.quantity)}</div>
+            <button type="button" class="btn-remove-item" data-index="${idx}" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer;" title="Sil">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
 
     return `
-      <div class="content-area" style="max-width: 600px; margin: 0 auto; padding-top: 24px;">
-        <!-- Sayfa Başlığı ve Seçilen Tarih Özeti -->
-        <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h1 style="font-size: 24px; font-weight: 800; color: #f8fafc; letter-spacing: -0.5px; margin-bottom: 4px;">
-              HIZLI FATURA KES
-            </h1>
-            <div style="font-size: 13px; color: #94a3b8;">
-              Fatura Tarihi: <strong style="color: #60a5fa;">${State.invoiceDraftDate || 'Bugün'}</strong>
-            </div>
+      <div class="content-area" style="max-width: 600px; margin: 0 auto; padding-top: 20px;">
+        <!-- Sayfa Üst Bilgisi (Küçük & Kısaca Önceki Adımların Özeti) -->
+        <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 6px;">
+          <div style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+            <span>📅 Tarih: <strong style="color: #f8fafc;">${State.invoiceDraftDate}</strong></span>
+            <span>&bull;</span>
+            <span>👤 Alıcı: <strong style="color: #60a5fa;">${custTitle}</strong></span>
           </div>
-          <button type="button" id="btn-back-to-step1" class="btn btn-outline btn-sm" style="border-color: #334155; color: #94a3b8; font-size: 12px;">
-            ← Tarihi Değiştir
+          <button type="button" id="btn-back-to-step2" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px; border-color: #334155; color: #94a3b8;">
+            ← Değiştir
           </button>
         </div>
 
-        <!-- 2. Adım Kartı: Fatura Alıcısını Giriniz -->
-        <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">
-            <div style="font-size: 16px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; width: 24px; height: 24px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 12px; align-items: center; justify-content: center; font-weight: 800;">2</span>
-              Fatura Alıcısını Giriniz
-            </div>
-            <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 2 / 4</span>
+        <!-- 3. Adım: Mal/Hizmet Kartı Seçiniz -->
+        <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
+          <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; width: 22px; height: 22px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 11px; align-items: center; justify-content: center; font-weight: 800;">3</span>
+            Mal / Hizmet Kartı Seçiniz
           </div>
 
-          ${selectedCust ? `
-            <!-- Seçilen Müşteri Özeti -->
-            <div style="background: #0b0f19; border: 1px solid #3b82f6; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                  <span class="badge ${selectedCust.customer_type === 'INDIVIDUAL' ? 'badge-info' : 'badge-success'}" style="margin-bottom: 8px;">
-                    ${selectedCust.customer_type === 'INDIVIDUAL' ? 'Bireysel Müşteri' : 'Kurumsal Şirket'}
-                  </span>
-                  <div style="font-size: 16px; font-weight: 800; color: #f8fafc; margin-bottom: 4px;">
-                    ${selectedCust.customer_type === 'INDIVIDUAL' ? `${selectedCust.first_name || ''} ${selectedCust.last_name || ''}` : selectedCust.company_name}
-                  </div>
-                  <div style="font-size: 12px; color: #94a3b8;">
-                    <strong>VKN/TCKN:</strong> ${selectedCust.tax_number}
-                    ${selectedCust.city ? ` &nbsp;|&nbsp; ${selectedCust.district || ''}/${selectedCust.city}` : ''}
-                  </div>
-                </div>
-                <button type="button" id="btn-change-selected-customer" class="btn btn-outline btn-sm" style="font-size: 11px; border-color: #334155; color: #94a3b8;">
-                  Değiştir
-                </button>
+          <!-- 6 Adet Buton Şeklinde Hizmet Kartı Kutusu (2 Sütun) -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px;">
+            ${cardsHtml}
+          </div>
+        </div>
+
+        <!-- Fatura Özeti Bölümü -->
+        <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
+          <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+            Fatura Özeti
+          </div>
+
+          <!-- Eklenen Kalemler -->
+          <div style="margin-bottom: 14px;">
+            ${cartLinesHtml}
+          </div>
+
+          <!-- Toplam Rakamlar -->
+          ${cartItems.length > 0 ? `
+            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 6px;">
+                <span>KDV Matrahı:</span>
+                <strong style="color: #f8fafc;">${State.formatCurrency(totals.subtotal)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
+                <span>Hesaplanan KDV:</span>
+                <strong style="color: #f8fafc;">${State.formatCurrency(totals.vatTotal)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: #38bdf8; border-top: 1px solid #1e293b; padding-top: 8px;">
+                <span>GENEL TOPLAM:</span>
+                <span>${State.formatCurrency(totals.grandTotal)}</span>
               </div>
             </div>
+          ` : ''}
 
-            <!-- Seçilen Müşteri ile İleri Butonu -->
-            <button type="button" id="btn-proceed-to-step3" class="btn btn-primary btn-block" style="height: 50px; font-size: 15px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <span>Alıcı Onaylandı, 3. Adıma Geç</span>
-              <span>➔</span>
-            </button>
-          ` : `
-            <!-- Müşteri Arama Metin Kutusu -->
-            <div style="position: relative; margin-bottom: 18px;">
-              <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; display: block;">
-                Müşteri Ara veya Seç
-              </label>
-              <div style="position: relative;">
-                <span style="position: absolute; left: 14px; top: 14px; color: #64748b; font-size: 16px;">🔍</span>
-                <input 
-                  type="text" 
-                  id="customer-search-input" 
-                  class="form-input" 
-                  placeholder="Müşteri TC No, Vergi no, adı veya telefonu..." 
-                  autocomplete="off"
-                  style="height: 50px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; font-size: 14px; border-radius: 10px; padding-left: 44px; width: 100%; outline: none;"
-                >
-              </div>
-              <div id="customer-search-results" class="dropdown-results" style="display: none; background: #0f172a; border-color: #1e293b;"></div>
-            </div>
+          <!-- Fatura Açıklaması (İsteğe Bağlı) -->
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block;">
+              Fatura Açıklaması / Not (İsteğe Bağlı)
+            </label>
+            <input type="text" id="invoice-notes-input" class="form-input" placeholder="Örn: 34 ABC 123 plakalı araç taşıma bedeli" style="height: 42px; font-size: 13px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; border-radius: 8px; width: 100%;">
+          </div>
 
-            <!-- İki Adet Yan Yana Hızlı Buton -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <!-- 1. Buton: Nihai Tüketici (Bireysel) -->
-              <button 
-                type="button" 
-                id="btn-quick-retail-customer" 
-                class="btn" 
-                style="height: 48px; background: #064e3b; border: 1px solid #059669; color: #6ee7b7; font-size: 13px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;"
-              >
-                <span>⚡ Nihai Tüketici</span>
-                <span style="font-size: 11px; opacity: 0.8; font-weight: normal;">(Bireysel)</span>
-              </button>
-
-              <!-- 2. Buton: + Yeni Müşteri Ekle -->
-              <button 
-                type="button" 
-                id="btn-quick-new-customer" 
-                class="btn" 
-                style="height: 48px; background: #1e293b; border: 1px solid #3b82f6; color: #60a5fa; font-size: 13px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;"
-              >
-                <span>➕ Yeni Müşteri Ekle</span>
-              </button>
-            </div>
-          `}
+          <!-- Faturayı Oluştur Butonu -->
+          <button type="button" id="btn-create-invoice-final" class="btn btn-success btn-block" style="height: 52px; font-size: 16px; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); cursor: pointer;">
+            <span>🛡️ Faturayı Oluştur</span>
+          </button>
         </div>
       </div>
     `;
@@ -275,13 +390,11 @@ const QuickInvoiceView = {
     // 2. ADIM OLAYLARI (EVENTS)
     // =========================================================================
     if (this.currentStep === 2) {
-      // 1. Adıma Geri Dön
       document.getElementById('btn-back-to-step1')?.addEventListener('click', () => {
         this.currentStep = 1;
         App.render();
       });
 
-      // Seçili Müşteriyi Değiştir
       document.getElementById('btn-change-selected-customer')?.addEventListener('click', () => {
         State.setSelectedCustomer(null);
         App.render();
@@ -289,10 +402,11 @@ const QuickInvoiceView = {
 
       // 3. Adıma İlerle
       document.getElementById('btn-proceed-to-step3')?.addEventListener('click', () => {
-        Toast.info('3. Adım: Hizmet / Ürün ve Tutar Girilmesi ekranı hazırlanıyor...');
+        this.currentStep = 3;
+        App.render();
       });
 
-      // Hızlı Nihai Tüketici Butonu (Tek tıkla atar)
+      // Hızlı Nihai Tüketici Butonu (Tek tıkla atar ve 3. adıma geçer)
       document.getElementById('btn-quick-retail-customer')?.addEventListener('click', () => {
         State.setSelectedCustomer({
           id: 'retail',
@@ -305,18 +419,20 @@ const QuickInvoiceView = {
           address: 'Perakende Satış Müşterisi'
         });
         Toast.success('Nihai Tüketici (Bireysel) alıcı olarak seçildi.');
+        this.currentStep = 3;
         App.render();
       });
 
-      // Yeni Müşteri Ekle Modalını Aç
+      // Yeni Müşteri Ekle Modalı
       document.getElementById('btn-quick-new-customer')?.addEventListener('click', () => {
         Modals.showCustomerModal((newCust) => {
           State.setSelectedCustomer(newCust);
+          this.currentStep = 3;
           App.render();
         });
       });
 
-      // Canlı Müşteri Arama (TCKN, VKN, İsim, Tel)
+      // Canlı Müşteri Arama
       const searchInput = document.getElementById('customer-search-input');
       const searchResults = document.getElementById('customer-search-results');
 
@@ -343,6 +459,7 @@ const QuickInvoiceView = {
                 document.getElementById('link-create-from-search')?.addEventListener('click', () => {
                   Modals.showCustomerModal((newCust) => {
                     State.setSelectedCustomer(newCust);
+                    this.currentStep = 3;
                     App.render();
                   });
                 });
@@ -369,6 +486,7 @@ const QuickInvoiceView = {
                     const cust = customers.find(x => x.id === item.dataset.custId);
                     if (cust) {
                       State.setSelectedCustomer(cust);
+                      this.currentStep = 3;
                       App.render();
                     }
                   });
@@ -380,6 +498,89 @@ const QuickInvoiceView = {
           }, 200);
         });
       }
+
+      return;
+    }
+
+    // =========================================================================
+    // 3. ADIM OLAYLARI (EVENTS)
+    // =========================================================================
+    if (this.currentStep === 3) {
+      // 2. Adıma Geri Dön
+      document.getElementById('btn-back-to-step2')?.addEventListener('click', () => {
+        this.currentStep = 2;
+        App.render();
+      });
+
+      // Hizmet Kartlarına Dokunma -> Tutar Girme Modalı Açılır
+      document.querySelectorAll('.pos-card-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const card = {
+            id: btn.dataset.cardId,
+            name: btn.dataset.cardName,
+            vat_rate: parseFloat(btn.dataset.cardVat),
+            default_price: parseFloat(btn.dataset.cardPrice),
+            unit: btn.dataset.cardUnit
+          };
+
+          Modals.showAmountModal(card, (item) => {
+            State.addCartItem(item);
+            App.render();
+          });
+        });
+      });
+
+      // Satırı Sil Butonu
+      document.querySelectorAll('.btn-remove-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.index, 10);
+          State.removeCartItem(idx);
+          App.render();
+        });
+      });
+
+      // Faturayı Oluştur Butonu -> GİB SMS Akışını Başlatır
+      document.getElementById('btn-create-invoice-final')?.addEventListener('click', async () => {
+        if (State.cartItems.length === 0) {
+          Toast.error('Lütfen en az bir hizmet kartına dokunarak tutar ekleyiniz.');
+          return;
+        }
+
+        const submitBtn = document.getElementById('btn-create-invoice-final');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'GİB e-Arşiv Bağlanıyor... Lütfen Bekleyiniz...';
+
+        const notes = document.getElementById('invoice-notes-input')?.value || '';
+
+        try {
+          // 1. Taslak Fatura Oluştur
+          const draftRes = await API.createInvoice({
+            customerId: State.selectedCustomer ? State.selectedCustomer.id : 'retail',
+            invoiceMode: 'QUICK',
+            notes,
+            items: State.cartItems
+          });
+
+          const invoiceId = draftRes.invoice.id;
+
+          // 2. GİB SMS Kodu İste
+          const smsRes = await API.requestGibSms(invoiceId);
+
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>🛡️ Faturayı Oluştur</span>';
+
+          // 3. Kullanıcıya SMS Kod Giriş Ekranını Aç
+          Modals.showSmsModal(invoiceId, smsRes, (finalizedInvoice) => {
+            State.clearCart();
+            Modals.showPrintModal(finalizedInvoice.id, finalizedInvoice.invoice_number);
+            window.location.hash = '#/invoices';
+          });
+        } catch (err) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>🛡️ Faturayı Oluştur</span>';
+          Toast.error(err.message || 'Fatura oluşturulurken hata oluştu.');
+        }
+      });
     }
   }
 };
