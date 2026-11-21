@@ -69,19 +69,8 @@ const QuickInvoiceView = {
             <span style="font-size: 12px; color: #64748b; font-weight: 600;">Adım 1 / 4</span>
           </div>
 
-          <!-- Yıl Bilgisi (Sistemden Otomatik) -->
-          <div style="margin-bottom: 18px;">
-            <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; display: block;">
-              Fatura Yılı (Otomatik)
-            </label>
-            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 12px 16px; font-size: 16px; font-weight: 700; color: #60a5fa; display: flex; justify-content: space-between; align-items: center;">
-              <span>${currentYear}</span>
-              <span style="font-size: 11px; background: #1e293b; color: #94a3b8; padding: 3px 8px; border-radius: 6px;">Sistem Yılı</span>
-            </div>
-          </div>
-
           <!-- Gün ve Ay Seçimi (Aşağı Doğru Çoktan Seçmeli) -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
             <div>
               <label for="select-invoice-day" style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; display: block;">
                 Fatura Günü
@@ -98,6 +87,17 @@ const QuickInvoiceView = {
               <select id="select-invoice-month" class="form-input" style="height: 48px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; font-size: 15px; font-weight: 600; border-radius: 10px; padding: 0 12px; width: 100%; outline: none;">
                 ${monthsOptionsHtml}
               </select>
+            </div>
+          </div>
+
+          <!-- Yıl Bilgisi (Gün ve Ayın Altında - Sistemden Otomatik) -->
+          <div style="margin-bottom: 24px;">
+            <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; display: block;">
+              Fatura Yılı
+            </label>
+            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 12px 16px; font-size: 16px; font-weight: 700; color: #60a5fa; display: flex; justify-content: space-between; align-items: center;">
+              <span>${currentYear}</span>
+              <span style="font-size: 11px; background: #1e293b; color: #94a3b8; padding: 3px 8px; border-radius: 6px;">Sistemden Otomatik</span>
             </div>
           </div>
 
