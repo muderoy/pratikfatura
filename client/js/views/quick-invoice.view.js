@@ -401,15 +401,10 @@ const QuickInvoiceView = {
 
           <!-- Okunaklı Fatura Kağıdı / Önizleme Kartı -->
           <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 24px;">
-            <!-- Fatura Başlık & Tarih Bilgisi -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-              <div>
-                <div style="font-size: 18px; font-weight: 900; color: #38bdf8; letter-spacing: -0.3px;">KESFATURA.COM</div>
-                <div style="font-size: 11px; color: #94a3b8;">e-Arşiv Fatura Portalı</div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 13px; font-weight: 800; color: #f8fafc;">e-ARŞİV FATURA TASLAĞI</div>
-                <div style="font-size: 12px; color: #60a5fa; margin-top: 2px;">Tarih: <strong>${State.invoiceDraftDate}</strong></div>
+            <!-- Fatura Tarih Bilgisi (Yazılar temizlendi) -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 18px;">
+              <div style="font-size: 13px; color: #94a3b8;">
+                Fatura Tarihi: <strong style="color: #60a5fa; font-size: 14px;">${State.invoiceDraftDate}</strong>
               </div>
             </div>
 
@@ -468,9 +463,9 @@ const QuickInvoiceView = {
                 <span>Hesaplanan Toplam KDV:</span>
                 <strong style="color: #f8fafc;">${State.formatCurrency(totals.vatTotal)}</strong>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: #38bdf8; border-top: 1px solid #1e293b; padding-top: 10px;">
-                <span>ÖDENECEK GENEL TOPLAM:</span>
-                <span>${State.formatCurrency(totals.grandTotal)}</span>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 800; color: #38bdf8; border-top: 1px solid #1e293b; padding-top: 10px;">
+                <span style="font-size: 14px; font-weight: 700;">ÖDENECEK GENEL TOPLAM:</span>
+                <span style="font-size: 16px;">${State.formatCurrency(totals.grandTotal)}</span>
               </div>
             </div>
           </div>
