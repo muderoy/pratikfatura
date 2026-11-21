@@ -16,32 +16,32 @@ const Modals = {
     backdrop.innerHTML = `
       <div class="modal-card">
         <div class="modal-header">
-          <h3 style="font-size: 16px; font-weight: 700; color: #0f172a;">➕ Yeni Müşteri Ekle</h3>
-          <button type="button" class="btn btn-outline btn-sm modal-close" style="padding: 4px 8px;">✕</button>
+          <h3 style="font-size: 17px; font-weight: 800; color: #f8fafc; letter-spacing: -0.3px;">➕ Yeni Müşteri Ekle</h3>
+          <button type="button" class="btn btn-outline btn-sm modal-close" style="padding: 4px 10px; border-color: #334155; color: #94a3b8;">✕</button>
         </div>
         <form id="form-new-customer">
           <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label">Müşteri Türü</label>
-              <div style="display: flex; gap: 20px;">
-                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                  <input type="radio" name="customerType" value="CORPORATE" checked id="cust-type-corp"> Kurumsal (Şirket / VKN)
+            <div class="form-group" style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;">
+              <label class="form-label" style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">MÜŞTERİ TÜRÜ</label>
+              <div style="display: flex; gap: 24px; color: #f8fafc; font-weight: 600; font-size: 14px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="radio" name="customerType" value="CORPORATE" checked id="cust-type-corp" style="accent-color: #3b82f6; width: 16px; height: 16px;"> Kurumsal (Şirket)
                 </label>
-                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                  <input type="radio" name="customerType" value="INDIVIDUAL" id="cust-type-ind"> Bireysel (Şahıs / TCKN)
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="radio" name="customerType" value="INDIVIDUAL" id="cust-type-ind" style="accent-color: #3b82f6; width: 16px; height: 16px;"> Bireysel (Şahıs)
                 </label>
               </div>
             </div>
 
             <div class="form-group" id="group-company">
               <label class="form-label">Firma Unvanı *</label>
-              <input type="text" name="companyName" class="form-input" placeholder="Örn: Anadolu Lojistik A.Ş.">
+              <input type="text" name="companyName" class="form-input" placeholder="Örn: Anadolu Lojistik Ltd. Şti.">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; display: none;" id="group-individual">
               <div class="form-group">
                 <label class="form-label">Ad *</label>
-                <input type="text" name="firstName" class="form-input" placeholder="Adı">
+                <input type="text" name="firstName" class="form-input" placeholder="Müşterinin Adı">
               </div>
               <div class="form-group">
                 <label class="form-label">Soyad *</label>
