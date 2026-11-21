@@ -513,14 +513,14 @@ body {
 }
 
 .btn-outline {
-  background-color: #ffffff;
-  border-color: var(--border);
-  color: var(--text-main);
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
 }
 
 .btn-outline:hover {
-  background-color: var(--bg-main);
-  border-color: #cbd5e1;
+  background-color: #334155;
+  border-color: #475569;
 }
 
 .btn-danger {
@@ -546,24 +546,28 @@ body {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-main);
+  color: #f1f5f9;
   margin-bottom: 6px;
 }
 
 .form-input, .form-select, .form-textarea {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid #1e293b;
   border-radius: var(--radius-md);
   font-size: 14px;
-  background-color: #ffffff;
-  color: var(--text-main);
+  background-color: #0b0f19;
+  color: #f8fafc;
   outline: none;
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: #64748b;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 /* Modals */
@@ -573,21 +577,22 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 20px;
+  padding: 16px;
 }
 
 .modal-card {
-  background: #ffffff;
+  background: #131b2e;
+  border: 1px solid #1e293b;
   border-radius: var(--radius-lg);
-  max-width: 540px;
+  max-width: 560px;
   width: 100%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   animation: modalPop 0.2s ease-out;
 }
@@ -599,25 +604,27 @@ body {
 
 .modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #1e293b;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: #0f172a;
 }
 
 .modal-body {
   padding: 20px;
   max-height: 80vh;
   overflow-y: auto;
+  color: #f8fafc;
 }
 
 .modal-footer {
   padding: 14px 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #1e293b;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  background-color: #f8fafc;
+  background-color: #0f172a;
 }
 
 /* Badges */
