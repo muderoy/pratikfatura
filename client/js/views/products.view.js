@@ -146,8 +146,15 @@ const ProductsView = {
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Birim</label>
-                <input type="text" name="unit" class="form-input" value="${product?.unit || 'Sefer'}" placeholder="Sefer, Adet, Gün, vb.">
+                <label class="form-label">Birim *</label>
+                <select name="unit" class="form-select" style="height: 44px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; font-size: 14px; font-weight: 600; border-radius: 8px; width: 100%; outline: none; padding: 0 10px;">
+                  ${[
+                    'Adet', 'Kilogram', 'gram', 'Ton', 'litre', 'Mililitre', 
+                    'metre', 'santimetre', 'Milimetre', 'kilometre', 'metrekare', 
+                    'Metreküp', 'kilowatsaat', 'dakika', 'saat', 'gün', 'ay', 'yıl', 
+                    'çift', 'düzine', 'set', 'paket', 'kutu', 'Sefer', 'Palet'
+                  ].map(u => `<option value="${u}" ${(product?.unit || 'Adet').toLowerCase() === u.toLowerCase() ? 'selected' : ''}>${u}</option>`).join('')}
+                </select>
               </div>
             </div>
 
