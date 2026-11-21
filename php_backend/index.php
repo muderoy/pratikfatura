@@ -5,7 +5,7 @@
  */
 
 error_reporting(E_ALL);
-ini_set('display_errors', '1');
+ini_set('display_errors', '0');
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/services.php';
@@ -181,8 +181,8 @@ try {
     if ($path === '/api/customers' && $method === 'POST') {
         $u = requireAuth(['BUSINESS_USER']);
         $id = Security::generateUUID();
-        $customerType = $body['customer_type'] ?? 'CORPORATE';
-        $taxNumber = trim($body['tax_number'] ?? '');
+        $customerType = $body['customerType'] ?? $body['customer_type'] ?? 'CORPORATE';
+        $taxNumber = trim($body['taxNumber'] ?? $body['tax_number'] ?? '');
 
         if (!$taxNumber) {
             jsonResponse(['success' => false, 'error' => 'VKN/TCKN zorunludur.'], 400);
@@ -193,11 +193,16 @@ try {
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 $id, $u['tenantId'], $customerType,
-                $body['first_name'] ?? null, $body['last_name'] ?? null,
-                $body['company_name'] ?? null, $taxNumber,
-                $body['tax_office'] ?? null, $body['phone'] ?? null,
-                $body['email'] ?? null, $body['city'] ?? null,
-                $body['district'] ?? null, $body['address'] ?? null,
+                $body['firstName'] ?? $body['first_name'] ?? null,
+                $body['lastName'] ?? $body['last_name'] ?? null,
+                $body['companyName'] ?? $body['company_name'] ?? null,
+                $taxNumber,
+                $body['taxOffice'] ?? $body['tax_office'] ?? null,
+                $body['phone'] ?? null,
+                $body['email'] ?? null,
+                $body['city'] ?? null,
+                $body['district'] ?? null,
+                $body['address'] ?? null,
                 $body['notes'] ?? null
             ]
         );
