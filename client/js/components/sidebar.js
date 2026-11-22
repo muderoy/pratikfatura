@@ -13,14 +13,13 @@ const Sidebar = {
 
     if (user.role === 'BUSINESS_USER') {
       menuItems = [
-        { hash: '#/pos', label: '⚡ Hızlı Fatura (POS)', icon: '⚡', highlight: true },
+        { hash: '#/pos', label: '⚡ Hızlı Fatura', icon: '⚡', highlight: true },
         { hash: '#/dashboard', label: '📊 Dashboard', icon: '📊' },
         { hash: '#/detailed-invoice', label: '📝 Detaylı Fatura Kes', icon: '📝' },
         { hash: '#/invoices', label: '📑 Faturalarım', icon: '📑' },
         { hash: '#/customers', label: '👥 Müşterilerim', icon: '👥' },
         { hash: '#/products', label: '📦 Hizmet ve Kartlar', icon: '📦' },
         { hash: '#/reports', label: '📈 Satış & KDV Raporu', icon: '📈' },
-        { hash: '#/refunds', label: '🔄 İade ve İptal', icon: '🔄' },
         { hash: '#/settings', label: '⚙️ Firma Bilgileri & GİB', icon: '⚙️' }
       ];
     } else if (user.role === 'RESELLER') {
