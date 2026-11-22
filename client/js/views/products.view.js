@@ -10,35 +10,35 @@ const ProductsView = {
       <div class="content-area">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <div>
-            <h1 style="font-size: 24px; font-weight: 800; color: #0f172a;">📦 Ürün ve Hizmet Yönetimi</h1>
-            <p style="font-size: 13px; color: #64748b;">Hizmetlerinizi yönetin ve Hızlı Fatura (POS) ekranında görünecek 8 favori kartı belirleyin.</p>
+            <h1 style="font-size: 24px; font-weight: 800; color: #f8fafc;">📦 Ürün ve Hizmet Yönetimi</h1>
+            <p style="font-size: 13px; color: #94a3b8;">Hizmetlerinizi yönetin ve Hızlı Fatura ekranında görünecek 8 favori kartı belirleyin.</p>
           </div>
           <button type="button" id="btn-create-product" class="btn btn-primary">
             ➕ Yeni Hizmet / Ürün Ekle
           </button>
         </div>
 
-        <div class="card" style="background: #eff6ff; border-color: #bfdbfe; padding: 16px; margin-bottom: 20px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="card" style="background: #0f172a; border: 1px solid #1e293b; padding: 16px; margin-bottom: 20px; border-radius: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
             <span style="font-size: 24px;">💡</span>
-            <div style="font-size: 13px; color: #1e3a8a;">
-              <strong>8 Adet Hızlı POS Kartı:</strong> İşletmenizde en sık kestiğiniz 8 hizmeti "Favori POS Kartı" olarak işaretleyiniz. Bu kartlar Hızlı Fatura ana ekranında büyük butonlar olarak yer alır.
+            <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+              <strong style="color: #60a5fa;">8 Adet Hızlı Kart:</strong> İşletmenizde en sık kestiğiniz 8 Ürün/Hizmeti "Favori Kart" olarak işaretleyiniz. Bu kartlar Hızlı Fatura ana ekranında büyük butonlar olarak yer alır.
             </div>
           </div>
         </div>
 
-        <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="card" style="padding: 0; overflow: hidden; background: #131b2e; border: 1px solid #1e293b; border-radius: 14px;">
           <div class="table-responsive">
             <table class="data-table">
               <thead>
-                <tr>
-                  <th>Hizmet / Mal Adı</th>
-                  <th>Kodu</th>
-                  <th>Birim</th>
-                  <th>KDV Oranı</th>
-                  <th style="text-align: right;">Varsayılan Tutar</th>
-                  <th style="text-align: center;">Hızlı POS Kartı (Maks. 8)</th>
-                  <th style="text-align: right;">İşlemler</th>
+                <tr style="background: #0b0f19; border-bottom: 1px solid #1e293b;">
+                  <th style="color: #94a3b8;">Hizmet / Mal Adı</th>
+                  <th style="color: #94a3b8;">Kodu</th>
+                  <th style="color: #94a3b8;">Birim</th>
+                  <th style="color: #94a3b8;">KDV Oranı</th>
+                  <th style="text-align: right; color: #94a3b8;">Varsayılan Tutar</th>
+                  <th style="text-align: center; color: #94a3b8;">Hızlı Kart (Maks. 8)</th>
+                  <th style="text-align: right; color: #94a3b8;">İşlemler</th>
                 </tr>
               </thead>
               <tbody id="products-tbody">
@@ -68,24 +68,24 @@ const ProductsView = {
       this.products = res.products || [];
 
       tbody.innerHTML = this.products.map(p => `
-        <tr>
+        <tr style="border-bottom: 1px solid #1e293b;">
           <td>
-            <strong style="color: #0f172a;">${p.name}</strong>
-            ${p.description ? `<div style="font-size: 11px; color: #64748b;">${p.description}</div>` : ''}
+            <strong style="color: #f8fafc; font-size: 14px; font-weight: 700;">${p.name}</strong>
+            ${p.description ? `<div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">${p.description}</div>` : ''}
           </td>
-          <td><code>${p.code || '-'}</code></td>
-          <td>${p.unit || 'Adet'}</td>
+          <td><code style="color: #60a5fa; background: #0b0f19; padding: 2px 6px; border-radius: 4px; border: 1px solid #1e293b;">${p.code || '-'}</code></td>
+          <td style="color: #cbd5e1; font-weight: 600;">${p.unit || 'Adet'}</td>
           <td><span class="badge badge-info">%${p.vat_rate} KDV</span></td>
-          <td style="text-align: right; font-weight: 700;">
+          <td style="text-align: right; font-weight: 800; color: #38bdf8; font-size: 14px;">
             ${p.default_price > 0 ? State.formatCurrency(p.default_price) : '-'}
           </td>
           <td style="text-align: center;">
-            <button class="btn btn-sm ${p.is_quick_card ? 'btn-success' : 'btn-outline'} btn-toggle-card" data-id="${p.id}" data-active="${p.is_quick_card}">
-              ${p.is_quick_card ? '⭐ POS Favori (Aktif)' : '☆ Favoriye Ekle'}
+            <button class="btn btn-sm ${p.is_quick_card ? 'btn-success' : 'btn-outline'} btn-toggle-card" data-id="${p.id}" data-active="${p.is_quick_card}" style="font-size: 11px; padding: 4px 10px;">
+              ${p.is_quick_card ? '⭐ Favori Kart (Aktif)' : '☆ Favoriye Ekle'}
             </button>
           </td>
           <td style="text-align: right;">
-            <button class="btn btn-outline btn-sm btn-edit-product" data-id="${p.id}">Düzenle</button>
+            <button class="btn btn-outline btn-sm btn-edit-product" data-id="${p.id}" style="font-size: 12px; border-color: #334155; color: #f8fafc;">Düzenle</button>
           </td>
         </tr>
       `).join('');
@@ -97,7 +97,7 @@ const ProductsView = {
           const current = btn.dataset.active === '1';
           try {
             await API.toggleQuickCard(id, !current, 1);
-            Toast.success(!current ? 'Hızlı POS kartı olarak eklendi.' : 'Hızlı kartlardan kaldırıldı.');
+            Toast.success(!current ? 'Hızlı karta eklendi.' : 'Hızlı kartlardan kaldırıldı.');
             this.loadProducts();
           } catch (err) {
             Toast.error(err.message);
@@ -176,8 +176,8 @@ const ProductsView = {
 
             <div class="form-group">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" name="isQuickCard" value="1" ${product?.is_quick_card ? 'checked' : ''}>
-                <span style="font-weight: 600; font-size: 13px;">Hızlı POS Ekranında Favori Kart Olarak Göster (Maks 8)</span>
+                <input type="checkbox" name="isQuickCard" value="1" ${product?.is_quick_card ? 'checked' : ''} style="accent-color: #3b82f6; width: 16px; height: 16px;">
+                <span style="font-weight: 600; font-size: 13px; color: #f8fafc;">Hızlı Fatura Ekranında Favori Kart Olarak Göster (Maks 8)</span>
               </label>
             </div>
           </div>
