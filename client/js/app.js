@@ -78,9 +78,6 @@ const App = {
     } else if (hash.startsWith('#/reports')) {
       view = ReportsView;
       viewName = 'ReportsView';
-    } else if (hash.startsWith('#/refunds')) {
-      view = RefundsView;
-      viewName = 'RefundsView';
     } else if (hash.startsWith('#/settings')) {
       view = SettingsView;
       viewName = 'SettingsView';
