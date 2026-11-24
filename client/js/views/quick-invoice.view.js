@@ -11,6 +11,27 @@ const QuickInvoiceView = {
   searchTimeout: null,
   quickCards: [],
 
+  isIbanAutoAddEnabled() {
+    return (State.tenant && State.tenant.includeIbanInNotes) || (localStorage.getItem('pf_include_iban_in_notes') === '1');
+  },
+
+  getCompanyIban() {
+    return (State.tenant && State.tenant.iban) || localStorage.getItem('pf_company_iban') || '';
+  },
+
+  getInitialNotes() {
+    if (State.invoiceDraftNotes !== undefined && State.invoiceDraftNotes !== null && State.invoiceDraftNotes !== '') {
+      return State.invoiceDraftNotes;
+    }
+    if (this.isIbanAutoAddEnabled()) {
+      const iban = this.getCompanyIban();
+      if (iban) {
+        return `IBAN: ${iban}`;
+      }
+    }
+    return '';
+  },
+
   async render() {
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -338,7 +359,12 @@ const QuickInvoiceView = {
               <label style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block;">
                 Fatura Açıklaması / Not (İsteğe Bağlı)
               </label>
-              <input type="text" id="invoice-notes-input" class="form-input" value="${State.invoiceDraftNotes || ''}" placeholder="Örn: 34 ABC 123 plakalı araç taşıma bedeli" style="height: 42px; font-size: 13px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; border-radius: 8px; width: 100%;">
+              <input type="text" id="invoice-notes-input" class="form-input" value="${this.getInitialNotes()}" placeholder="Örn: 34 ABC 123 plakalı araç taşıma bedeli" style="height: 42px; font-size: 13px; background: #0b0f19; border: 1px solid #1e293b; color: #f8fafc; border-radius: 8px; width: 100%;">
+              ${this.isIbanAutoAddEnabled() && this.getCompanyIban() ? `
+                <div style="font-size: 11px; color: #60a5fa; margin-top: 5px; display: flex; align-items: center; gap: 4px;">
+                  <span>💳</span> <span>Banka IBAN bilginiz fatura açıklamasına otomatik eklenecektir.</span>
+                </div>
+              ` : ''}
             </div>
 
             <!-- Fatura Önizleme Butonu -->
@@ -681,7 +707,13 @@ const QuickInvoiceView = {
           return;
         }
 
-        const notes = document.getElementById('invoice-notes-input')?.value || '';
+        let notes = document.getElementById('invoice-notes-input')?.value || '';
+        if (this.isIbanAutoAddEnabled()) {
+          const iban = this.getCompanyIban();
+          if (iban && !notes.includes(iban)) {
+            notes = notes.trim() ? `${notes.trim()} - IBAN: ${iban}` : `IBAN: ${iban}`;
+          }
+        }
         State.invoiceDraftNotes = notes;
 
         // 4. Adıma geç
