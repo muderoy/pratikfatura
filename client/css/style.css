@@ -717,7 +717,37 @@ body {
   }
 }
 
+/* Responsive Settings Layout */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+
+  .form-row-2col {
+    grid-template-columns: 1fr !important;
+    gap: 0;
+  }
+
   html {
     overflow-x: hidden;
     overscroll-behavior-y: auto !important;
