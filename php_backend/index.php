@@ -35,8 +35,19 @@ $body = json_decode($rawInput, true) ?: [];
 
 // Yetkilendirme Kontrolü
 function getAuthUser(): ?array {
-    $headers = getallheaders();
-    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    $authHeader = '';
+    if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+    } elseif (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    } elseif (function_exists('getallheaders')) {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    } elseif (function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    }
+
     if (preg_match('/Bearer\s+(\S+)/', $authHeader, $matches)) {
         return Security::verifyToken($matches[1]);
     }
@@ -409,7 +420,128 @@ try {
         exit;
     }
 
-    // 10. RAPORLAR / DASHBOARD SUMMARY
+    // 10. ADMIN ROTALAR
+    // Admin: Dashboard İstatistikleri
+    if ($path === '/api/admin/dashboard' && $method === 'GET') {
+        $u = requireAuth(['ADMIN']);
+        $stats = Database::get("SELECT
+            (SELECT COUNT(*) FROM tenants) AS totalTenants,
+            (SELECT COUNT(*) FROM tenants WHERE is_active = 1) AS activeTenants,
+            (SELECT COUNT(*) FROM users WHERE role = 'RESELLER') AS totalResellers,
+            (SELECT COUNT(*) FROM invoices) AS totalInvoices,
+            (SELECT COALESCE(SUM(grand_total), 0) FROM invoices WHERE status = 'BASARILI') AS totalVolume
+        ", []);
+        $recentInvoices = Database::query(
+            "SELECT i.*, t.name AS tenant_name FROM invoices i
+             LEFT JOIN tenants t ON i.tenant_id = t.id
+             ORDER BY i.created_at DESC LIMIT 20",
+            []
+        );
+        jsonResponse(['success' => true, 'stats' => $stats, 'recentInvoices' => $recentInvoices, 'recentLogs' => []]);
+    }
+
+    // Admin: Tüm İşletmeler (Tenants)
+    if ($path === '/api/admin/tenants' && $method === 'GET') {
+        $u = requireAuth(['ADMIN']);
+        $tenants = Database::query(
+            "SELECT t.*,
+                (SELECT COUNT(*) FROM invoices WHERE tenant_id = t.id) AS invoice_count,
+                (SELECT COALESCE(SUM(grand_total), 0) FROM invoices WHERE tenant_id = t.id AND status = 'BASARILI') AS total_sales,
+                (SELECT COUNT(*) FROM gib_settings WHERE tenant_id = t.id AND portal_username_enc IS NOT NULL) AS has_gib_configured,
+                u2.name AS reseller_name
+             FROM tenants t
+             LEFT JOIN users u2 ON (u2.id = t.reseller_id OR u2.id = CONCAT('usr-', t.reseller_id)) AND u2.role = 'RESELLER'
+             ORDER BY t.created_at DESC",
+            []
+        );
+        jsonResponse(['success' => true, 'tenants' => $tenants]);
+    }
+
+    // Admin: Tenant Durum Değiştir
+    if (preg_match('#^/api/admin/tenants/([a-zA-Z0-9-]+)/status$#', $path, $m) && ($method === 'POST' || $method === 'PATCH')) {
+        $u = requireAuth(['ADMIN']);
+        $tenantId = $m[1];
+        $tenant = Database::get('SELECT * FROM tenants WHERE id = ?', [$tenantId]);
+        if (!$tenant) jsonResponse(['success' => false, 'error' => 'İşletme bulunamadı.'], 404);
+        $newStatus = (int)$tenant['is_active'] ? 0 : 1;
+        Database::run('UPDATE tenants SET is_active = ? WHERE id = ?', [$newStatus, $tenantId]);
+        jsonResponse(['success' => true]);
+    }
+
+    // Admin: Bayiler (Resellers)
+    if ($path === '/api/admin/resellers' && $method === 'GET') {
+        $u = requireAuth(['ADMIN']);
+        $resellers = Database::query(
+            "SELECT u.*,
+                (SELECT COUNT(*) FROM tenants WHERE reseller_id = u.id OR reseller_id = REPLACE(u.id, 'usr-', '')) AS tenant_count,
+                (SELECT COALESCE(SUM(i.grand_total), 0) FROM invoices i
+                 JOIN tenants t ON i.tenant_id = t.id WHERE (t.reseller_id = u.id OR t.reseller_id = REPLACE(u.id, 'usr-', '')) AND i.status = 'BASARILI') AS total_volume
+             FROM users u
+             WHERE u.role = 'RESELLER'
+             ORDER BY u.created_at DESC",
+            []
+        );
+        jsonResponse(['success' => true, 'resellers' => $resellers]);
+    }
+
+    // Admin: Yeni Bayi Oluştur
+    if ($path === '/api/admin/resellers' && $method === 'POST') {
+        $u = requireAuth(['ADMIN']);
+        $name = trim($body['name'] ?? '');
+        $email = strtolower(trim($body['email'] ?? ''));
+        $password = $body['password'] ?? '';
+        $phone = trim($body['phone'] ?? '');
+        if (!$name || !$email || !$password) {
+            jsonResponse(['success' => false, 'error' => 'Ad, e-posta ve parola zorunludur.'], 400);
+        }
+        $exists = Database::get('SELECT id FROM users WHERE email = ?', [$email]);
+        if ($exists) jsonResponse(['success' => false, 'error' => 'Bu e-posta zaten kayıtlı.'], 409);
+        $id = Security::generateUUID();
+        $hash = Security::hashPassword($password);
+        Database::run(
+            "INSERT INTO users (id, name, email, password_hash, role, phone, is_active) VALUES (?, ?, ?, ?, 'RESELLER', ?, 1)",
+            [$id, $name, $email, $hash, $phone]
+        );
+        jsonResponse(['success' => true]);
+    }
+
+    // Admin: Bayi Durum Değiştir
+    if (preg_match('#^/api/admin/resellers/([a-zA-Z0-9-]+)/status$#', $path, $m) && ($method === 'POST' || $method === 'PATCH')) {
+        $u = requireAuth(['ADMIN']);
+        $resellerId = $m[1];
+        $reseller = Database::get("SELECT * FROM users WHERE id = ? AND role = 'RESELLER'", [$resellerId]);
+        if (!$reseller) jsonResponse(['success' => false, 'error' => 'Bayi bulunamadı.'], 404);
+        $newStatus = (int)$reseller['is_active'] ? 0 : 1;
+        Database::run('UPDATE users SET is_active = ? WHERE id = ?', [$newStatus, $resellerId]);
+        jsonResponse(['success' => true]);
+    }
+
+    // Admin: Bayi Sil
+    if (preg_match('#^/api/admin/resellers/([a-zA-Z0-9-]+)$#', $path, $m) && $method === 'DELETE') {
+        $u = requireAuth(['ADMIN']);
+        $resellerId = $m[1];
+        Database::run("DELETE FROM users WHERE id = ? AND role = 'RESELLER'", [$resellerId]);
+        jsonResponse(['success' => true]);
+    }
+
+    // Admin: Sistem Logları
+    if ($path === '/api/admin/logs' && $method === 'GET') {
+        $u = requireAuth(['ADMIN']);
+        // Basit log tablosu yoksa boş döndür
+        $logs = [];
+        try {
+            $logs = Database::query(
+                "SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 100",
+                []
+            );
+        } catch (Exception $ex) {
+            // system_logs tablosu yoksa boş döndür
+            $logs = [];
+        }
+        jsonResponse(['success' => true, 'logs' => $logs]);
+    }
+
+    // 11. RAPORLAR / DASHBOARD SUMMARY
     if ($path === '/api/reports/summary' && $method === 'GET') {
         $u = requireAuth(['BUSINESS_USER']);
         $totalInvoices = Database::get('SELECT COUNT(*) as cnt, COALESCE(SUM(grand_total), 0) as total FROM invoices WHERE tenant_id = ?', [$u['tenantId']]);
