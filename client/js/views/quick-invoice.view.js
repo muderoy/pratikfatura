@@ -477,15 +477,8 @@ const QuickInvoiceView = {
               </table>
             </div>
 
-            <!-- Fatura Notu Varsa -->
-            ${notes ? `
-              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; margin-bottom: 18px; font-size: 12px; color: #94a3b8;">
-                <strong style="color: #f8fafc;">Fatura Notu:</strong> ${notes}
-              </div>
-            ` : ''}
-
-            <!-- Toplam Tutarlar Tablosu -->
-            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 14px 18px; margin-bottom: 6px;">
+            <!-- Toplam Tutarlar Tablosu (Özet) -->
+            <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 14px 18px; margin-top: 16px; margin-bottom: 12px;">
               <div style="display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; margin-bottom: 6px;">
                 <span>KDV Matrahı (Net Tutar):</span>
                 <strong style="color: #f8fafc;">${State.formatCurrency(totals.subtotal)}</strong>
@@ -499,6 +492,17 @@ const QuickInvoiceView = {
                 <span style="font-size: 16px;">${State.formatCurrency(totals.grandTotal)}</span>
               </div>
             </div>
+
+            <!-- Fatura Notu Varsa (Özetin En Altında) -->
+            ${notes ? `
+              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 14px; margin-bottom: 6px; font-size: 12px; color: #94a3b8; display: flex; gap: 8px; align-items: flex-start;">
+                <span style="font-size: 15px;">📝</span>
+                <div>
+                  <strong style="color: #f8fafc; display: block; margin-bottom: 2px;">Fatura Notu / Açıklama:</strong>
+                  <span style="color: #cbd5e1; word-break: break-word;">${notes}</span>
+                </div>
+              </div>
+            ` : ''}
           </div>
 
           <!-- Alt İşlem Butonları (Düzelt / Onayla) -->
