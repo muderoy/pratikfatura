@@ -6,6 +6,22 @@ const DetailedInvoiceView = {
   items: [],
   selectedCustomer: null,
 
+  isIbanAutoAddEnabled() {
+    return (State.tenant && State.tenant.includeIbanInNotes) || (localStorage.getItem('pf_include_iban_in_notes') === '1');
+  },
+
+  getCompanyIban() {
+    return (State.tenant && State.tenant.iban) || localStorage.getItem('pf_company_iban') || '';
+  },
+
+  getInitialNotes() {
+    if (this.isIbanAutoAddEnabled()) {
+      const iban = this.getCompanyIban();
+      if (iban) return `IBAN: ${iban}`;
+    }
+    return '';
+  },
+
   async render() {
     this.selectedCustomer = this.selectedCustomer || State.selectedCustomer;
 
@@ -142,7 +158,10 @@ const DetailedInvoiceView = {
             <div class="card-title">3. Fatura Notu ve Ödeme</div>
             <div class="form-group">
               <label class="form-label">Fatura Açıklaması</label>
-              <textarea id="detailed-notes" class="form-textarea" rows="3" placeholder="Fatura altı açıklaması, taşıma irsaliye numarası veya banka hesap detayları..."></textarea>
+              <textarea id="detailed-notes" class="form-textarea" rows="3" placeholder="Fatura altı açıklaması, taşıma irsaliye numarası veya banka hesap detayları...">${this.getInitialNotes()}</textarea>
+              ${this.isIbanAutoAddEnabled() && this.getCompanyIban() ? `
+                <div style="font-size: 11px; color: #60a5fa; margin-top: 4px;">ℹ️ Ayarlardan IBAN otomatik ekleme aktif.</div>
+              ` : ''}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <div class="form-group">
@@ -350,7 +369,13 @@ const DetailedInvoiceView = {
       return;
     }
 
-    const notes = document.getElementById('detailed-notes')?.value || '';
+    let notes = document.getElementById('detailed-notes')?.value || '';
+    if (this.isIbanAutoAddEnabled()) {
+      const iban = this.getCompanyIban();
+      if (iban && !notes.includes(iban)) {
+        notes = notes.trim() ? `${notes.trim()} - IBAN: ${iban}` : `IBAN: ${iban}`;
+      }
+    }
     const paymentMethod = document.getElementById('detailed-payment-method')?.value || 'HAVALE_EFT';
     const currency = document.getElementById('detailed-currency')?.value || 'TRY';
 
