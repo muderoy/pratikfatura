@@ -35,7 +35,7 @@ const SettingsView = {
           <p style="font-size: 13px; color: #94a3b8;">Firma bilgileri, resmî e-Arşiv portal erişim anahtarları ve yazdırma tercihleri.</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="settings-grid">
           <!-- 1. Firma Bilgileri Formu -->
           <div class="card">
             <div class="card-title">🏢 Firma / İşletme Bilgileri</div>
@@ -45,7 +45,7 @@ const SettingsView = {
                 <input type="text" name="name" class="form-input" value="${c.name || ''}" required>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-row-2col">
                 <div class="form-group">
                   <label class="form-label">VKN / TCKN *</label>
                   <input type="text" name="taxNumber" class="form-input" value="${c.taxNumber || ''}" required>
@@ -56,7 +56,7 @@ const SettingsView = {
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-row-2col">
                 <div class="form-group">
                   <label class="form-label">Telefon</label>
                   <input type="text" name="phone" class="form-input" value="${c.phone || ''}">
@@ -67,7 +67,7 @@ const SettingsView = {
                 </div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-row-2col">
                 <div class="form-group">
                   <label class="form-label">İl</label>
                   <input type="text" name="city" class="form-input" value="${c.city || ''}">
@@ -98,7 +98,7 @@ const SettingsView = {
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-block">
+              <button type="submit" class="btn btn-primary btn-block" style="height: 48px; font-size: 15px; font-weight: 700; border-radius: 10px;">
                 Firma Bilgilerini Kaydet
               </button>
             </form>
@@ -112,8 +112,8 @@ const SettingsView = {
                 ${gibStatusBadge}
               </div>
 
-              <div style="background-color: #f1f5f9; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #475569;">
-                Gelir İdaresi Başkanlığı İnteraktif Vergi Dairesi / e-Arşiv Fatura Portalı kullanıcı kodu ve parolanız <strong>AES-256-GCM</strong> algoritması ile şifrelenerek saklanır.
+              <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                Gelir İdaresi Başkanlığı İnteraktif Vergi Dairesi / e-Arşiv Fatura Portalı kullanıcı kodu ve parolanız <strong style="color: #60a5fa;">AES-256-GCM</strong> algoritması ile şifrelenerek saklanır.
               </div>
 
               <form id="form-gib-settings">
@@ -138,11 +138,11 @@ const SettingsView = {
                   </label>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                  <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                  <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 180px; height: 46px; font-weight: 700; border-radius: 10px;">
                     Entegrasyon Bilgilerini Kaydet
                   </button>
-                  <button type="button" id="btn-test-gib" class="btn btn-outline" style="white-space: nowrap;">
+                  <button type="button" id="btn-test-gib" class="btn btn-outline" style="white-space: nowrap; flex: 1; min-width: 140px; height: 46px; font-weight: 700; border-radius: 10px;">
                     🔌 Bağlantıyı Test Et
                   </button>
                 </div>
