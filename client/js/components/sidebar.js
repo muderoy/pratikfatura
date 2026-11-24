@@ -38,7 +38,9 @@ const Sidebar = {
     }
 
     const itemsHtml = menuItems.map(item => {
-      const isActive = currentHash.startsWith(item.hash);
+      const isActive = (item.hash === '#/admin' || item.hash === '#/reseller')
+        ? currentHash === item.hash
+        : currentHash.startsWith(item.hash);
       const classes = ['nav-link'];
       if (item.highlight) classes.push('highlight');
       if (isActive && !item.highlight) classes.push('active');
