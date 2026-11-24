@@ -142,6 +142,7 @@ class PdfHtmlService {
         $formattedSubtotal = number_format($invoice['subtotal'] ?? 0, 2, ',', '.');
         $formattedVat = number_format($invoice['vat_total'] ?? 0, 2, ',', '.');
         $formattedGrand = number_format($invoice['grand_total'] ?? 0, 2, ',', '.');
+        $notesBlock = !empty($invoice['notes']) ? "<div style='margin-top:16px; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; color:#334155;'><strong>Fatura Açıklaması / Not:</strong> {$invoice['notes']}</div>" : '';
 
         return "<!DOCTYPE html>
         <html>
@@ -206,6 +207,8 @@ class PdfHtmlService {
                     </tbody>
                 </table>
 
+                {$notesBlock}
+
                 <div style='width: 300px; margin-left: auto; margin-top: 20px; background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:6px;'>
                     <div style='display:flex; justify-content:space-between; margin-bottom:4px;'>
                         <span>Matrah:</span> <strong>₺{$formattedSubtotal}</strong>
@@ -237,6 +240,7 @@ class PdfHtmlService {
         }
 
         $formattedGrand = number_format($invoice['grand_total'] ?? 0, 2, ',', '.');
+        $notesBlock = !empty($invoice['notes']) ? "<div style='margin-top:16px; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; color:#334155;'><strong>Fatura Açıklaması / Not:</strong> {$invoice['notes']}</div>" : '';
 
         return "<!DOCTYPE html>
         <html>
