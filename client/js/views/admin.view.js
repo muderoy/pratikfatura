@@ -26,17 +26,20 @@ const AdminView = {
         logs = res.logs || [];
       }
     } catch (e) {
-      console.error(e);
+      console.error('Admin veri yükleme hatası:', e);
+      if (typeof Toast !== 'undefined' && Toast.error) {
+        Toast.error(e.message || 'Veriler yüklenirken bir hata oluştu.');
+      }
     }
 
     return `
       <div class="content-area">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
-            <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <h1 style="font-size: 24px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
               👑 Sistem Yönetim Paneli (Admin)
             </h1>
-            <p style="font-size: 13px; color: #64748b;">Sistem geneli bayiler, işletmeler, GİB entegrasyon sağlığı ve denetim kayıtları.</p>
+            <p style="font-size: 13px; color: #94a3b8;">Sistem geneli bayiler, işletmeler, GİB entegrasyon sağlığı ve denetim kayıtları.</p>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-sm ${this.activeTab === 'stats' ? 'btn-primary' : 'btn-outline'} tab-btn" data-tab="stats">Genel İstatistikler</button>
@@ -57,21 +60,21 @@ const AdminView = {
       return `
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
           <div class="card" style="padding: 20px;">
-            <div style="font-size: 11px; color: #64748b; font-weight: 700;">TOPLAM İŞLETME</div>
-            <div style="font-size: 28px; font-weight: 900; color: #1e3a8a; margin-top: 4px;">${s.totalTenants || 0}</div>
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">TOPLAM İŞLETME</div>
+            <div style="font-size: 28px; font-weight: 900; color: #60a5fa; margin-top: 4px;">${s.totalTenants || 0}</div>
             <div style="font-size: 11px; color: #10b981;">${s.activeTenants || 0} Aktif İşletme</div>
           </div>
           <div class="card" style="padding: 20px;">
-            <div style="font-size: 11px; color: #64748b; font-weight: 700;">KAYITLI BAYİ (RESELLER)</div>
-            <div style="font-size: 28px; font-weight: 900; color: #b45309; margin-top: 4px;">${s.totalResellers || 0}</div>
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">KAYITLI BAYİ (RESELLER)</div>
+            <div style="font-size: 28px; font-weight: 900; color: #f59e0b; margin-top: 4px;">${s.totalResellers || 0}</div>
           </div>
           <div class="card" style="padding: 20px;">
-            <div style="font-size: 11px; color: #64748b; font-weight: 700;">TOPLAM DÜZENLENEN FATURA</div>
-            <div style="font-size: 28px; font-weight: 900; color: #047857; margin-top: 4px;">${s.totalInvoices || 0} Adet</div>
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">TOPLAM DÜZENLENEN FATURA</div>
+            <div style="font-size: 28px; font-weight: 900; color: #34d399; margin-top: 4px;">${s.totalInvoices || 0} Adet</div>
           </div>
           <div class="card" style="padding: 20px;">
-            <div style="font-size: 11px; color: #64748b; font-weight: 700;">TOPLAM RESMÎ CİRO</div>
-            <div style="font-size: 28px; font-weight: 900; color: #0f172a; margin-top: 4px;">${State.formatCurrency(s.totalVolume || 0)}</div>
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">TOPLAM RESMİ CİRO</div>
+            <div style="font-size: 28px; font-weight: 900; color: #f8fafc; margin-top: 4px;">${State.formatCurrency(s.totalVolume || 0)}</div>
           </div>
         </div>
 
@@ -174,31 +177,34 @@ const AdminView = {
                 </tr>
               </thead>
               <tbody>
-                ${tenants.map(t => `
+                ${tenants.map(t => {
+                  const isActive = parseInt(t.is_active) === 1 || t.is_active === true;
+                  const hasGib = parseInt(t.has_gib_configured) > 0 || t.has_gib_configured === true;
+                  return `
                   <tr>
-                    <td><strong>${t.name}</strong></td>
-                    <td><code>${t.tax_number}</code></td>
-                    <td>${t.reseller_name ? `<span class="badge badge-warning">${t.reseller_name}</span>` : 'Doğrudan'}</td>
-                    <td>${t.city || '-'}</td>
-                    <td style="text-align: center;">${t.invoice_count}</td>
-                    <td style="text-align: right; font-weight: 700;">${State.formatCurrency(t.total_sales)}</td>
+                    <td><strong style="color: #f8fafc; font-size: 14px;">${t.name}</strong></td>
+                    <td><code style="color: #60a5fa; background: #0b0f19; padding: 3px 8px; border-radius: 4px; border: 1px solid #1e293b; font-weight: 700;">${t.tax_number}</code></td>
+                    <td style="color: #cbd5e1;">${t.reseller_name ? `<span class="badge badge-warning">${t.reseller_name}</span>` : '<span style="color: #94a3b8;">Doğrudan</span>'}</td>
+                    <td style="color: #cbd5e1;">${t.city || '-'}</td>
+                    <td style="text-align: center; color: #f8fafc; font-weight: 600;">${t.invoice_count || 0}</td>
+                    <td style="text-align: right; font-weight: 700; color: #38bdf8;">${State.formatCurrency(t.total_sales || 0)}</td>
                     <td style="text-align: center;">
-                      <span class="badge ${t.has_gib_configured ? 'badge-success' : 'badge-warning'}">
-                        ${t.has_gib_configured ? '✓ Tanımlı' : 'Eksik'}
+                      <span class="badge ${hasGib ? 'badge-success' : 'badge-warning'}">
+                        ${hasGib ? '✓ Tanımlı' : 'Eksik'}
                       </span>
                     </td>
                     <td style="text-align: center;">
-                      <span class="badge ${t.is_active ? 'badge-success' : 'badge-danger'}">
-                        ${t.is_active ? 'AKTİF' : 'PASİF'}
+                      <span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">
+                        ${isActive ? 'AKTİF' : 'PASİF'}
                       </span>
                     </td>
                     <td style="text-align: right;">
                       <button class="btn btn-outline btn-sm btn-toggle-tenant" data-id="${t.id}">
-                        ${t.is_active ? 'Durdur' : 'Aktif Et'}
+                        ${isActive ? 'Durdur' : 'Aktif Et'}
                       </button>
                     </td>
                   </tr>
-                `).join('') || '<tr><td colspan="9" style="text-align: center; padding: 20px;">İşletme bulunamadı.</td></tr>'}
+                `;}).join('') || '<tr><td colspan="9" style="text-align: center; padding: 32px; color: #94a3b8;">Kayıtlı işletme bulunamadı.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -249,8 +255,11 @@ const AdminView = {
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.activeTab = btn.dataset.tab;
-        App.render();
+        const tab = btn.dataset.tab;
+        if (tab === 'stats') window.location.hash = '#/admin';
+        else if (tab === 'resellers') window.location.hash = '#/admin-resellers';
+        else if (tab === 'tenants') window.location.hash = '#/admin-tenants';
+        else if (tab === 'logs') window.location.hash = '#/admin-logs';
       });
     });
 
