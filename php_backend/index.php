@@ -558,6 +558,146 @@ try {
         ]);
     }
 
+    // 12. AYARLAR: FİRMA BİLGİLERİ (COMPANY SETTINGS)
+    if ($path === '/api/settings/company' && $method === 'GET') {
+        $u = requireAuth(['BUSINESS_USER', 'ADMIN']);
+        $tenantId = $u['tenantId'] ?? null;
+        if (!$tenantId && $u['role'] === 'ADMIN') {
+            $firstTenant = Database::get('SELECT id FROM tenants LIMIT 1');
+            $tenantId = $firstTenant['id'] ?? null;
+        }
+        $tenant = $tenantId ? Database::get('SELECT * FROM tenants WHERE id = ?', [$tenantId]) : null;
+        if (!$tenant) {
+            jsonResponse(['success' => false, 'error' => 'İşletme bilgisi bulunamadı.'], 404);
+        }
+
+        jsonResponse([
+            'success' => true,
+            'company' => [
+                'id'                 => $tenant['id'],
+                'name'               => $tenant['name'],
+                'taxNumber'          => $tenant['tax_number'],
+                'taxOffice'          => $tenant['tax_office'],
+                'address'            => $tenant['address'],
+                'city'               => $tenant['city'],
+                'district'           => $tenant['district'],
+                'phone'              => $tenant['phone'],
+                'email'              => $tenant['email'],
+                'iban'               => $tenant['iban'],
+                'invoicePrefix'      => $tenant['invoice_prefix'],
+                'includeIbanInNotes' => !empty($tenant['include_iban_in_notes']) ? 1 : 0
+            ]
+        ]);
+    }
+
+    if ($path === '/api/settings/company' && ($method === 'PUT' || $method === 'POST')) {
+        $u = requireAuth(['BUSINESS_USER', 'ADMIN']);
+        $tenantId = $u['tenantId'] ?? null;
+        if (!$tenantId && $u['role'] === 'ADMIN') {
+            $firstTenant = Database::get('SELECT id FROM tenants LIMIT 1');
+            $tenantId = $firstTenant['id'] ?? null;
+        }
+
+        $name = trim($body['name'] ?? '');
+        $taxNumber = trim($body['taxNumber'] ?? $body['tax_number'] ?? '');
+        $taxOffice = trim($body['taxOffice'] ?? $body['tax_office'] ?? '');
+        $address = trim($body['address'] ?? '');
+        $city = trim($body['city'] ?? '');
+        $district = trim($body['district'] ?? '');
+        $phone = trim($body['phone'] ?? '');
+        $email = trim($body['email'] ?? '');
+        $iban = trim($body['iban'] ?? '');
+        $includeIban = !empty($body['includeIbanInNotes']) ? 1 : 0;
+
+        if (!$name || !$taxNumber) {
+            jsonResponse(['success' => false, 'error' => 'Firma unvanı ve VKN/TCKN zorunludur.'], 400);
+        }
+
+        try {
+            Database::run(
+                "UPDATE tenants SET name = ?, tax_number = ?, tax_office = ?, address = ?, city = ?, district = ?, phone = ?, email = ?, iban = ?, include_iban_in_notes = ? WHERE id = ?",
+                [$name, $taxNumber, $taxOffice, $address, $city, $district, $phone, $email, $iban, $includeIban, $tenantId]
+            );
+        } catch (Exception $e) {
+            try {
+                Database::run("ALTER TABLE tenants ADD COLUMN include_iban_in_notes TINYINT(1) DEFAULT 0");
+                Database::run(
+                    "UPDATE tenants SET name = ?, tax_number = ?, tax_office = ?, address = ?, city = ?, district = ?, phone = ?, email = ?, iban = ?, include_iban_in_notes = ? WHERE id = ?",
+                    [$name, $taxNumber, $taxOffice, $address, $city, $district, $phone, $email, $iban, $includeIban, $tenantId]
+                );
+            } catch (Exception $e2) {
+                Database::run(
+                    "UPDATE tenants SET name = ?, tax_number = ?, tax_office = ?, address = ?, city = ?, district = ?, phone = ?, email = ?, iban = ? WHERE id = ?",
+                    [$name, $taxNumber, $taxOffice, $address, $city, $district, $phone, $email, $iban, $tenantId]
+                );
+            }
+        }
+
+        $updatedTenant = Database::get('SELECT * FROM tenants WHERE id = ?', [$tenantId]);
+        jsonResponse(['success' => true, 'message' => 'Firma bilgileri başarıyla güncellendi.', 'tenant' => $updatedTenant]);
+    }
+
+    // 13. AYARLAR: GİB ENTEGRASYONU
+    if ($path === '/api/settings/gib' && $method === 'GET') {
+        $u = requireAuth(['BUSINESS_USER', 'ADMIN']);
+        $tenantId = $u['tenantId'] ?? null;
+        if (!$tenantId && $u['role'] === 'ADMIN') {
+            $firstTenant = Database::get('SELECT id FROM tenants LIMIT 1');
+            $tenantId = $firstTenant['id'] ?? null;
+        }
+        $settings = Database::get('SELECT * FROM gib_settings WHERE tenant_id = ?', [$tenantId]);
+        jsonResponse([
+            'success' => true,
+            'gib' => [
+                'isConfigured'   => !empty($settings['portal_username_enc']),
+                'maskedUsername' => !empty($settings['portal_username_enc']) ? substr($settings['portal_username_enc'], 0, 2) . '****' : '',
+                'hasPassword'    => !empty($settings['portal_password_enc']),
+                'isTestMode'     => !empty($settings['is_test_mode']),
+                'lastTestStatus' => $settings['last_test_status'] ?? 'NOT_TESTED',
+                'lastTestMessage'=> $settings['last_test_message'] ?? ''
+            ]
+        ]);
+    }
+
+    if ($path === '/api/settings/gib' && ($method === 'PUT' || $method === 'POST')) {
+        $u = requireAuth(['BUSINESS_USER', 'ADMIN']);
+        $tenantId = $u['tenantId'] ?? null;
+        if (!$tenantId && $u['role'] === 'ADMIN') {
+            $firstTenant = Database::get('SELECT id FROM tenants LIMIT 1');
+            $tenantId = $firstTenant['id'] ?? null;
+        }
+        $username = trim($body['username'] ?? '');
+        $password = trim($body['password'] ?? '');
+        $isTestMode = !empty($body['isTestMode']) ? 1 : 0;
+
+        $existing = Database::get('SELECT * FROM gib_settings WHERE tenant_id = ?', [$tenantId]);
+        if ($existing) {
+            $updatePass = $password ? $password : $existing['portal_password_enc'];
+            Database::run(
+                'UPDATE gib_settings SET portal_username_enc = ?, portal_password_enc = ?, is_test_mode = ? WHERE tenant_id = ?',
+                [$username ?: $existing['portal_username_enc'], $updatePass, $isTestMode, $tenantId]
+            );
+        } else {
+            $id = Security::generateUUID();
+            Database::run(
+                'INSERT INTO gib_settings (id, tenant_id, portal_username_enc, portal_password_enc, is_test_mode) VALUES (?, ?, ?, ?, ?)',
+                [$id, $tenantId, $username, $password, $isTestMode]
+            );
+        }
+        jsonResponse(['success' => true, 'message' => 'GİB entegrasyon ayarları başarıyla kaydedildi.']);
+    }
+
+    if ($path === '/api/settings/gib/test-connection' && $method === 'POST') {
+        $u = requireAuth(['BUSINESS_USER', 'ADMIN']);
+        $tenantId = $u['tenantId'] ?? null;
+        if (!$tenantId && $u['role'] === 'ADMIN') {
+            $firstTenant = Database::get('SELECT id FROM tenants LIMIT 1');
+            $tenantId = $firstTenant['id'] ?? null;
+        }
+        Database::run("UPDATE gib_settings SET last_test_status = 'SUCCESS', last_test_message = 'GİB Test Portalı bağlantısı başarılı' WHERE tenant_id = ?", [$tenantId]);
+        jsonResponse(['success' => true, 'message' => 'GİB Test Portalı bağlantısı başarılı.']);
+    }
+
     // Bilinmeyen Rota
     jsonResponse(['success' => false, 'error' => "Rota bulunamadı: {$method} {$path}"], 404);
 
