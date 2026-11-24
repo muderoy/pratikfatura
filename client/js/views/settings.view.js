@@ -31,8 +31,8 @@ const SettingsView = {
     return `
       <div class="content-area">
         <div style="margin-bottom: 24px;">
-          <h1 style="font-size: 24px; font-weight: 800; color: #0f172a;">⚙️ Ayarlar ve Entegrasyon</h1>
-          <p style="font-size: 13px; color: #64748b;">Firma bilgileri, resmî e-Arşiv portal erişim anahtarları ve yazdırma tercihleri.</p>
+          <h1 style="font-size: 24px; font-weight: 800; color: #f8fafc;">⚙️ Ayarlar ve Entegrasyon</h1>
+          <p style="font-size: 13px; color: #94a3b8;">Firma bilgileri, resmî e-Arşiv portal erişim anahtarları ve yazdırma tercihleri.</p>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
@@ -83,14 +83,18 @@ const SettingsView = {
                 <textarea name="address" class="form-textarea" rows="2">${c.address || ''}</textarea>
               </div>
 
-              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
-                <div class="form-group">
-                  <label class="form-label">Banka IBAN Numarası</label>
-                  <input type="text" name="iban" class="form-input" value="${c.iban || ''}" placeholder="TR00 0000 0000 0000 0000 0000 00">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Fatura Seri Öneki</label>
-                  <input type="text" name="invoicePrefix" maxlength="3" class="form-input" value="${c.invoicePrefix || 'PRF'}">
+              <div class="form-group">
+                <label class="form-label">Banka IBAN Numarası</label>
+                <input type="text" id="company-iban-input" name="iban" class="form-input" value="${c.iban || localStorage.getItem('pf_company_iban') || ''}" placeholder="TR00 0000 0000 0000 0000 0000 00">
+              </div>
+
+              <div class="form-group" style="margin-top: -4px; margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                  <input type="checkbox" id="check-include-iban" name="includeIbanInNotes" value="1" ${(c.includeIbanInNotes || localStorage.getItem('pf_include_iban_in_notes') === '1') ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                  <span style="font-size: 13px; font-weight: 700; color: #f8fafc;">IBAN fatura açıklamasına eklensin</span>
+                </label>
+                <div style="font-size: 11px; color: #94a3b8; margin-left: 28px; margin-top: 3px;">
+                  İşaretlendiğinde, fatura oluştururken açıklama / not alanına banka IBAN bilginiz otomatik olarak eklenir.
                 </div>
               </div>
 
@@ -170,9 +174,33 @@ const SettingsView = {
     // 1. Company settings save
     const formComp = document.getElementById('form-company-settings');
     if (formComp) {
+      // Checkbox tıklandığında anında kaydet
+      const checkIban = document.getElementById('check-include-iban');
+      checkIban?.addEventListener('change', () => {
+        const isChecked = checkIban.checked;
+        const ibanVal = (document.getElementById('company-iban-input')?.value || '').trim();
+        localStorage.setItem('pf_include_iban_in_notes', isChecked ? '1' : '0');
+        if (ibanVal) localStorage.setItem('pf_company_iban', ibanVal);
+        if (State.tenant) {
+          State.tenant.includeIbanInNotes = isChecked;
+          if (ibanVal) State.tenant.iban = ibanVal;
+        }
+        Toast.info(isChecked ? 'IBAN fatura açıklamasına otomatik eklenecektir.' : 'IBAN otomatik ekleme kapatıldı.');
+      });
+
       formComp.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(formComp);
+        const isChecked = fd.get('includeIbanInNotes') === '1';
+        const ibanVal = (fd.get('iban') || '').trim();
+
+        localStorage.setItem('pf_include_iban_in_notes', isChecked ? '1' : '0');
+        if (ibanVal) localStorage.setItem('pf_company_iban', ibanVal);
+        if (State.tenant) {
+          State.tenant.iban = ibanVal;
+          State.tenant.includeIbanInNotes = isChecked;
+        }
+
         const payload = {
           name: fd.get('name'),
           taxNumber: fd.get('taxNumber'),
@@ -182,8 +210,8 @@ const SettingsView = {
           city: fd.get('city'),
           district: fd.get('district'),
           address: fd.get('address'),
-          iban: fd.get('iban'),
-          invoicePrefix: fd.get('invoicePrefix')
+          iban: ibanVal,
+          includeIbanInNotes: isChecked
         };
         try {
           await API.updateCompanySettings(payload);
