@@ -254,7 +254,7 @@ const QuickInvoiceView = {
     if (this.currentStep === 3) {
       try {
         const res = await API.getQuickCards();
-        this.quickCards = (res.cards || []).slice(0, 6);
+        this.quickCards = res.cards || [];
       } catch (e) {
         console.error('Quick cards fetch error:', e);
       }
@@ -314,15 +314,36 @@ const QuickInvoiceView = {
 
           <!-- 3. Adım: Mal/Hizmet Kartı Seçiniz -->
           <div class="card" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 20px;">
-            <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-              <span style="display: inline-flex; width: 22px; height: 22px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 11px; align-items: center; justify-content: center; font-weight: 800;">3</span>
-              Mal / Hizmet Kartı Seçiniz
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; width: 22px; height: 22px; background: #3b82f6; color: #fff; border-radius: 50%; font-size: 11px; align-items: center; justify-content: center; font-weight: 800;">3</span>
+                Mal / Hizmet Kartı Seçiniz
+              </div>
+              ${this.quickCards.length > 4 ? `
+                <span style="font-size: 11px; color: #94a3b8; background: #0b0f19; padding: 2px 8px; border-radius: 10px; border: 1px solid #1e293b;">
+                  Toplam ${this.quickCards.length} Kart (Kaydırın)
+                </span>
+              ` : ''}
             </div>
 
-            <!-- 6 Adet Buton Şeklinde Hizmet Kartı -->
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px;">
-              ${cardsHtml}
+            <!-- 4 Tanesi Görünür, Alttakiler Kaydırılabilir Kart Kutusu -->
+            <div class="quick-cards-wrapper">
+              <div class="quick-cards-scroll-container" id="quick-cards-scroll">
+                <div class="quick-cards-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                  ${cardsHtml}
+                </div>
+              </div>
+              ${this.quickCards.length > 4 ? `
+                <div class="quick-cards-fade-overlay" id="quick-cards-fade"></div>
+              ` : ''}
             </div>
+
+            ${this.quickCards.length > 4 ? `
+              <div id="quick-cards-scroll-hint" style="text-align: center; font-size: 11px; color: #60a5fa; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; user-select: none;">
+                <span style="display: inline-block; animation: bounce 1.5s infinite; font-size: 13px;">↓</span>
+                <span>Alttaki diğer kartlar için kaydırınız</span>
+              </div>
+            ` : ''}
           </div>
 
           <!-- Fatura Özeti -->
@@ -674,6 +695,27 @@ const QuickInvoiceView = {
     // 3. ADIM OLAYLARI
     // =========================================================================
     if (this.currentStep === 3) {
+      // Kart listesi kaydırma ve ipucu olayları
+      const scrollContainer = document.getElementById('quick-cards-scroll');
+      const fadeOverlay = document.getElementById('quick-cards-fade');
+      const scrollHint = document.getElementById('quick-cards-scroll-hint');
+
+      if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', () => {
+          const isAtBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 20;
+          if (fadeOverlay) {
+            fadeOverlay.style.opacity = isAtBottom ? '0' : '1';
+          }
+          if (scrollHint) {
+            scrollHint.style.opacity = isAtBottom ? '0.3' : '1';
+          }
+        });
+
+        scrollHint?.addEventListener('click', () => {
+          scrollContainer.scrollBy({ top: 110, behavior: 'smooth' });
+        });
+      }
+
       document.getElementById('btn-back-to-step2')?.addEventListener('click', () => {
         this.currentStep = 2;
         App.render();
