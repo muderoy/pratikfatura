@@ -88,9 +88,9 @@ const App = {
       }
       view = AdminView;
       viewName = 'AdminView';
-      if (hash.includes('resellers')) AdminView.activeTab = 'resellers';
-      else if (hash.includes('tenants')) AdminView.activeTab = 'tenants';
-      else if (hash.includes('logs')) AdminView.activeTab = 'logs';
+      if (hash.includes('reseller')) AdminView.activeTab = 'resellers';
+      else if (hash.includes('tenant')) AdminView.activeTab = 'tenants';
+      else if (hash.includes('log')) AdminView.activeTab = 'logs';
       else AdminView.activeTab = 'stats';
     } else if (hash.startsWith('#/reseller')) {
       if (State.user.role !== 'RESELLER' && State.user.role !== 'ADMIN') {
